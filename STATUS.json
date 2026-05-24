@@ -1,0 +1,196 @@
+{
+  "project": "personal-library",
+  "last_updated": "2026-05-24",
+  "version": "0.0.0",
+  "release_phase": "pre-scaffold",
+  "domains": [
+    {
+      "name": "foundation",
+      "status": "in_progress",
+      "quality_grade": "N/A",
+      "features": [
+        {
+          "id": "repo-001",
+          "name": "Repository state reconciliation",
+          "status": "done",
+          "tests": false,
+          "notes": "Rewrote CLAUDE.md, STATUS.json, docs/architecture.md, docs/progress.md, docs/design.md, HANDOFF.md. Updated active skill files. Corrected broken architecture reference. No application code — docs/state only. Correction pass (2026-05-24): restored import scope as back-011, made status consistent across all trackers, corrected carryover docs."
+        },
+        {
+          "id": "repo-002",
+          "name": "Project scaffold and git init",
+          "status": "pending",
+          "tests": false,
+          "notes": "Create .gitignore, api/ and web/ directory structure, git init, initial commit."
+        }
+      ]
+    },
+    {
+      "name": "backend-core",
+      "status": "pending",
+      "quality_grade": "N/A",
+      "features": [
+        {
+          "id": "back-001",
+          "name": "FastAPI setup — config, database, main",
+          "status": "pending",
+          "tests": false,
+          "notes": "pyproject.toml, .env.example, app/config.py (pydantic-settings), app/database.py (SQLAlchemy async engine), app/main.py (CORS, lifespan, router registration), app/deps.py."
+        },
+        {
+          "id": "back-002",
+          "name": "JWT auth — login endpoint and token verification",
+          "status": "pending",
+          "tests": false,
+          "notes": "app/auth.py, app/routers/auth.py. POST /auth/login returns JWT. Credentials from env. Tests: login success, wrong password, protected endpoint without token."
+        },
+        {
+          "id": "back-003",
+          "name": "SQLAlchemy models and initial Alembic migration",
+          "status": "pending",
+          "tests": false,
+          "notes": "models/book.py, tag.py, loan.py, label_template.py. alembic init, env.py, 0001_initial_schema migration."
+        },
+        {
+          "id": "back-004",
+          "name": "pytest async fixtures with isolated test database",
+          "status": "pending",
+          "tests": false,
+          "notes": "tests/conftest.py: test_engine, db_session, client, auth_client fixtures. Separate personal_library_test database."
+        }
+      ]
+    },
+    {
+      "name": "backend-books",
+      "status": "pending",
+      "quality_grade": "N/A",
+      "features": [
+        {
+          "id": "back-005",
+          "name": "ISBN EAN-13 validation and normalization",
+          "status": "pending",
+          "tests": false,
+          "notes": "services/isbn_validate.py: normalize_isbn(), validate_isbn13(). 6 unit tests."
+        },
+        {
+          "id": "back-006",
+          "name": "ISBN lookup — Open Library with Google Books fallback",
+          "status": "pending",
+          "tests": false,
+          "notes": "services/isbn_lookup.py: lookup_isbn(), BookData dataclass. respx mocks for 3 integration tests."
+        },
+        {
+          "id": "back-007",
+          "name": "Books CRUD with ISBN lookup endpoint",
+          "status": "pending",
+          "tests": false,
+          "notes": "schemas/book.py, routers/books.py. Endpoints: POST /books/, GET /books/, GET /books/{id}, PATCH /books/{id}, DELETE /books/{id}, GET /books/lookup/{isbn}. 6 tests."
+        }
+      ]
+    },
+    {
+      "name": "backend-catalog",
+      "status": "pending",
+      "quality_grade": "N/A",
+      "features": [
+        {
+          "id": "back-008",
+          "name": "Tags and loans CRUD",
+          "status": "pending",
+          "tests": false,
+          "notes": "schemas/tag.py, schemas/loan.py, routers/tags.py, routers/loans.py. Tags: create/list/update/delete. Loans: create, list (open_only filter), return endpoint."
+        },
+        {
+          "id": "back-009",
+          "name": "Label templates and PDF generation",
+          "status": "pending",
+          "tests": false,
+          "notes": "schemas/label_template.py, services/pdf_labels.py (reportlab), routers/labels.py. POST /labels/generate returns application/pdf with Dewey+title+barcode per book."
+        },
+        {
+          "id": "back-010",
+          "name": "BibTeX and CSV export",
+          "status": "pending",
+          "tests": false,
+          "notes": "services/bibtex_io.py, services/csv_io.py, routers/export.py. GET /export/bibtex and GET /export/csv. Empty catalog returns valid empty file."
+        },
+        {
+          "id": "back-011",
+          "name": "CSV and BibTeX import",
+          "status": "pending",
+          "tests": false,
+          "notes": "MVP scope per approved spec (Module 6). CSV upload with column mapping (POST /import/csv). BibTeX upload to import existing catalog from Zotero/Mendeley (POST /import/bibtex). Part of routers/export.py or new routers/import_.py."
+        }
+      ]
+    },
+    {
+      "name": "frontend-core",
+      "status": "pending",
+      "quality_grade": "N/A",
+      "features": [
+        {
+          "id": "front-001",
+          "name": "Next.js 15 scaffold — Tailwind v4, shadcn/ui, auth middleware",
+          "status": "pending",
+          "tests": false,
+          "notes": "web/: create-next-app, shadcn init, @zxing/browser install. src/lib/api.ts, src/lib/auth.ts (server actions, httpOnly cookie). src/middleware.ts redirects unauthenticated users to /login."
+        },
+        {
+          "id": "front-002",
+          "name": "Login page",
+          "status": "pending",
+          "tests": false,
+          "notes": "web/src/app/login/page.tsx. Client component. POST to /auth/login, stores token via server action, redirects to /catalog."
+        }
+      ]
+    },
+    {
+      "name": "frontend-catalog",
+      "status": "pending",
+      "quality_grade": "N/A",
+      "features": [
+        {
+          "id": "front-003",
+          "name": "Book catalog page — grid/list view with search and filters",
+          "status": "pending",
+          "tests": false,
+          "notes": "app/catalog/page.tsx. Search bar, tag/language/loan-status filters, sort controls. Grid (covers) and list toggle."
+        },
+        {
+          "id": "front-004",
+          "name": "Book detail page",
+          "status": "pending",
+          "tests": false,
+          "notes": "app/catalog/[id]/page.tsx. All book fields, tag badges, loan history, edit and delete actions."
+        },
+        {
+          "id": "front-005",
+          "name": "Book registration with ISBN scanner",
+          "status": "pending",
+          "tests": false,
+          "notes": "app/books/new/page.tsx + components/isbn-scanner.tsx (@zxing/browser). ISBN entry triggers /books/lookup/{isbn} pre-fill. Manual entry fallback."
+        },
+        {
+          "id": "front-006",
+          "name": "Loans page",
+          "status": "pending",
+          "tests": false,
+          "notes": "app/loans/page.tsx. Open loans list with days elapsed, return action, loan history per book."
+        },
+        {
+          "id": "front-007",
+          "name": "Label generation page",
+          "status": "pending",
+          "tests": false,
+          "notes": "app/labels/page.tsx. Select books, choose template, POST /labels/generate, trigger PDF download."
+        }
+      ]
+    }
+  ],
+  "architectural_drift": [],
+  "open_decisions": [
+    "Confirm PostgreSQL install method for local dev: Docker or native.",
+    "Confirm Google Books API key requirement (optional in spec — key is optional, lookup still works without it).",
+    "Production deployment details: nginx config, systemd units, env management on VPS."
+  ]
+}
