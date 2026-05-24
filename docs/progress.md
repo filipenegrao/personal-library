@@ -3,7 +3,7 @@
 > Human-readable backlog. **Canonical task state is `STATUS.json`.**
 > Align checkboxes with `STATUS.json` when features move.
 
-Updated: 2026-05-24
+Updated: 2026-05-24 (repo-002 scaffold complete)
 
 ---
 
@@ -12,7 +12,7 @@ Updated: 2026-05-24
 - [x] docs/specs: approved product spec (`docs/superpowers/specs/2026-05-23-personal-library-design.md`)
 - [x] docs/plans: implementation plan (`docs/superpowers/plans/2026-05-24-personal-library.md`)
 - [x] repo-001: Repository state reconciliation (done — 2026-05-24, correction pass same day)
-- [ ] repo-002: Project scaffold — `.gitignore`, `api/`, `web/`, `git init`
+- [x] repo-002: Project scaffold — `.gitignore`, `api/`, `web/` (done — 2026-05-24)
 
 ## Backend — Core
 
@@ -52,3 +52,4 @@ Updated: 2026-05-24
 - [x] docs/specs: approved product spec (2026-05-23)
 - [x] docs/plans: implementation plan (2026-05-24)
 - [x] repo-001: Repository state reconciliation (2026-05-24)
+- [x] repo-002: Project scaffold (2026-05-24)

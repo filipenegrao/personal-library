@@ -2,11 +2,11 @@
   "project": "personal-library",
   "last_updated": "2026-05-24",
   "version": "0.0.0",
-  "release_phase": "pre-scaffold",
+  "release_phase": "scaffold-complete",
   "domains": [
     {
       "name": "foundation",
-      "status": "in_progress",
+      "status": "done",
       "quality_grade": "N/A",
       "features": [
         {
@@ -19,9 +19,9 @@
         {
           "id": "repo-002",
           "name": "Project scaffold and git init",
-          "status": "pending",
+          "status": "done",
           "tests": false,
-          "notes": "Create .gitignore, api/ and web/ directory structure, git init, initial commit."
+          "notes": "Created root .gitignore (Python, Node, env, logs, macOS artifacts). Scaffolded api/ (app/models, schemas, routers, services, alembic/versions, tests with all placeholder .py files) and web/ (src/app routes, components, lib). Git already initialized (root commit on main). No application logic — empty/minimal placeholders only."
         }
       ]
     },

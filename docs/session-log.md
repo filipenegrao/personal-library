@@ -122,3 +122,39 @@ QA rejected the initial reconciliation for two blocking reasons: (1) repo-001 st
 
 - Begin repo-002: `git init`, `.gitignore`, scaffold `api/` + `web/` directories.
 - back-011 import implementation happens in the same domain slice as back-010 export.
+
+---
+
+## 2026-05-24 — repo-002: Project scaffold
+
+### What was done
+
+- Created root `.gitignore` with Python patterns (`__pycache__/`, `*.py[cod]`, `.venv/`, `venv/`, `dist/`, `.env`), Node patterns (`node_modules/`, `.next/`, `.env.local`), logs (`*.log`), and macOS artifacts (`.DS_Store`).
+- Scaffolded `api/` directory tree:
+  - `api/app/{models,schemas,routers,services}/` with `__init__.py` files in each subpackage
+  - `api/alembic/versions/`
+  - `api/tests/`
+  - 33 placeholder `.py` files matching the approved plan's file structure (main.py, config.py, database.py, auth.py, deps.py, 4 model files, 4 schema files, 6 router files, 5 service files, 9 test files), plus 3 empty `__init__.py` files — 36 `.py` files total
+- Scaffolded `web/` directory tree:
+  - `web/src/{app,components,lib}/`
+  - Route directories: `login/`, `catalog/[id]/`, `books/new/`, `loans/`, `labels/`
+- No application logic added — all placeholder files are empty (0 bytes).
+- Git was already initialized before this slice (root commit on `main` from repo-001 reconciliation).
+- Updated `STATUS.json`: repo-002 → `done`, foundation domain → `done`, release_phase → `scaffold-complete`.
+- Updated `docs/progress.md`: repo-002 checkbox checked.
+- Rewrote `HANDOFF.md` with current session snapshot.
+
+### Decisions
+
+- Placeholder files kept empty per task constraint ("no application logic"). The `__init__.py` files are also empty — no imports or `__all__` lists needed at scaffold stage.
+- Web route directories created as bare directories only — no `page.tsx` or `layout.tsx` files. Those belong in front-001 and subsequent frontend features.
+
+### Remaining setup gaps
+
+- No sensors runnable: no `pyproject.toml`, no `package.json`, no venv, no node_modules.
+- CI workflow (`.github/workflows/harness-ci.yml`) will fail until project config files and dependencies are installed.
+
+### Follow-ups
+
+- **back-001**: FastAPI setup — pyproject.toml, .env.example, config, database, main, deps.
+- **front-001**: Next.js 15 scaffold — create-next-app, Tailwind v4, shadcn/ui, auth middleware.

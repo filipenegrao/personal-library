@@ -19,9 +19,9 @@ with validated commit + push.
 
 ## Active feature for this session
 
-- Feature ID: repo-002
-- Feature name: Project scaffold and git init
-- Domain: foundation
+- Feature ID: back-001
+- Feature name: FastAPI setup — config, database, main
+- Domain: backend-core
 
 ## Orchestration steps
 
@@ -29,7 +29,7 @@ with validated commit + push.
 2. Validate implementation against architecture and scope.
 3. Trigger QA using harness/prompts/qa.md + docs/skills/active-qa-review.md.
 4. If QA rejects, loop corrections through Builder until approved.
-5. Run applicable sensors (none yet for docs-only; ruff/mypy/pytest once api/ exists).
+5. Run backend sensors: `ruff check .`, `mypy .`, `pytest` from `api/`.
 6. Ensure HANDOFF.md and STATUS.json are updated.
 7. Commit with Conventional Commits.
 8. Push to origin/main (once remote is set up).
