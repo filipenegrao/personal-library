@@ -5,41 +5,41 @@ Updated by Orchestrator at the end of each completed feature.
 
 ## Task
 
-- Feature ID: back-001
-- Feature name: FastAPI setup — config, database, main
+- Feature ID: back-003
+- Feature name: SQLAlchemy models and initial Alembic migration
 - Domain: backend-core
-- Goal: Create the backend package metadata and base FastAPI application files so backend sensors can run and subsequent backend features have a real foundation.
+- Goal: Implement the initial SQLAlchemy model layer and Alembic migration so the backend has a real schema foundation for CRUD and test fixtures.
 
 ## Mandatory scope
 
-1. Create `api/pyproject.toml` with project metadata and dependencies from the approved plan.
-2. Create `api/.env.example` with backend env vars for DB, auth, and optional Google Books key.
-3. Implement `api/app/config.py` using `pydantic-settings`.
-4. Implement `api/app/database.py` with SQLAlchemy async engine/session helpers and `Base`.
-5. Implement `api/app/main.py` with a minimal FastAPI app shell suitable for later router registration.
-6. Implement `api/app/deps.py` with initial dependency placeholders if needed for app startup.
-7. Create the backend virtual environment and install dev dependencies needed to run sensors.
-8. Update `HANDOFF.md`, `STATUS.json`, and `docs/session-log.md`.
+1. Implement `api/app/models/book.py`, `tag.py`, `loan.py`, and `label_template.py` based on the approved spec data model.
+2. Add any required model exports/import wiring needed for metadata discovery.
+3. Create Alembic project files needed for the initial migration path:
+   - `api/alembic.ini`
+   - `api/alembic/env.py`
+   - initial migration under `api/alembic/versions/`
+4. Ensure the SQLAlchemy metadata includes the new models for migration generation and test setup.
+5. Run backend sensors from `api/`: `ruff check .`, `mypy .`, `pytest`.
+6. Update `HANDOFF.md`, `STATUS.json`, and `docs/session-log.md`.
 
 ## Out of scope
 
-1. Alembic migration setup and model implementation (belongs to `back-003`).
-2. Auth route/login logic (belongs to `back-002`).
+1. Books/tags/loans/labels CRUD route implementation beyond schema/model foundation.
+2. ISBN lookup/validation business logic.
 3. Frontend scaffolding or `npm install`.
-4. Book/tag/loan/label/export/import business logic.
+4. Export/import business logic.
 
 ## Acceptance criteria
 
-1. `api/pyproject.toml` defines the backend package and dev dependencies needed for `ruff`, `mypy`, and `pytest`.
-2. `api/.env.example`, `app/config.py`, `app/database.py`, `app/main.py`, and `app/deps.py` exist and are coherent with `docs/architecture.md`.
-3. A backend virtual environment is created and dependencies are installed successfully.
-4. Backend sensors run and are reported: `ruff check .`, `mypy .`, `pytest` from `api/`.
-5. `STATUS.json` reflects `back-001 = done`.
-6. `HANDOFF.md` updated.
+1. The four model files match the approved data model shape closely enough for initial migration work.
+2. Alembic is configured and the initial migration is present.
+3. Backend sensors run and are reported: `ruff check .`, `mypy .`, `pytest` from `api/`.
+4. `STATUS.json` reflects `back-003 = done` when complete.
+5. `HANDOFF.md` updated.
 
 ## Constraints
 
 1. Follow AGENTS.md.
 2. Respect layer rules in docs/architecture.md.
-3. No scope creep beyond backend foundation.
+3. No scope creep beyond schema and migration foundation.
 4. No hardcoded credentials, tokens, or secrets.

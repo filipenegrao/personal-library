@@ -2,7 +2,7 @@
   "project": "personal-library",
   "last_updated": "2026-05-24",
   "version": "0.0.0",
-  "release_phase": "scaffold-complete",
+  "release_phase": "backend-auth-complete",
   "domains": [
     {
       "name": "foundation",
@@ -27,22 +27,22 @@
     },
     {
       "name": "backend-core",
-      "status": "pending",
+      "status": "in_progress",
       "quality_grade": "N/A",
       "features": [
         {
           "id": "back-001",
           "name": "FastAPI setup — config, database, main",
-          "status": "pending",
-          "tests": false,
-          "notes": "pyproject.toml, .env.example, app/config.py (pydantic-settings), app/database.py (SQLAlchemy async engine), app/main.py (CORS, lifespan, router registration), app/deps.py."
+          "status": "done",
+          "tests": true,
+          "notes": "Created pyproject.toml, .env.example, app/config.py, app/database.py, app/main.py, app/deps.py, and app/__init__.py. Added APIRouter stubs to all 6 router files and a foundation smoke test in tests/test_app.py. Created backend venv and installed dev dependencies. Final verified commands from api/: ruff pass, mypy pass, pytest pass. Test bootstrap no longer depends on an untracked local .env because tests seed required env vars in conftest.py before importing app.config."
         },
         {
           "id": "back-002",
           "name": "JWT auth — login endpoint and token verification",
-          "status": "pending",
-          "tests": false,
-          "notes": "app/auth.py, app/routers/auth.py. POST /auth/login returns JWT. Credentials from env. Tests: login success, wrong password, protected endpoint without token."
+          "status": "done",
+          "tests": true,
+          "notes": "app/auth.py: bcrypt hashing (hash_password, verify_password), JWT encode/decode (create_access_token, verify_token). app/routers/auth.py: POST /auth/login returns JWT on valid credentials, 401 on bad creds; GET /auth/me protected test endpoint. tests/test_auth.py: 3 tests (login success, wrong password → 401, protected endpoint without token → 401). Switched from passlib[bcrypt] to bcrypt directly (passlib incompatible with bcrypt>=5)."
         },
         {
           "id": "back-003",
@@ -54,9 +54,9 @@
         {
           "id": "back-004",
           "name": "pytest async fixtures with isolated test database",
-          "status": "pending",
+          "status": "done",
           "tests": false,
-          "notes": "tests/conftest.py: test_engine, db_session, client, auth_client fixtures. Separate personal_library_test database."
+          "notes": "tests/conftest.py: test_engine (session-scoped, drop/create schema), db_session, client (ASGITransport, DB override), auth_client (pre-authenticated). Test database created: personal_library_test on local PostgreSQL 18 (Homebrew)."
         }
       ]
     },

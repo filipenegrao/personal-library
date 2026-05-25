@@ -3,7 +3,7 @@
 > Human-readable backlog. **Canonical task state is `STATUS.json`.**
 > Align checkboxes with `STATUS.json` when features move.
 
-Updated: 2026-05-24 (repo-002 scaffold complete)
+Updated: 2026-05-24 (backend-core auth/foundation complete)
 
 ---
 
@@ -16,10 +16,10 @@ Updated: 2026-05-24 (repo-002 scaffold complete)
 
 ## Backend — Core
 
-- [ ] back-001: FastAPI setup — config, database, main, deps
-- [ ] back-002: JWT auth — login endpoint, token verification
+- [x] back-001: FastAPI setup — config, database, main, deps (done — 2026-05-24)
+- [x] back-002: JWT auth — login endpoint, token verification (done — 2026-05-24)
 - [ ] back-003: SQLAlchemy models + initial Alembic migration
-- [ ] back-004: pytest async fixtures with isolated test database
+- [x] back-004: pytest async fixtures with isolated test database (done — 2026-05-24)
 
 ## Backend — Books
 
@@ -53,3 +53,6 @@ Updated: 2026-05-24 (repo-002 scaffold complete)
 - [x] docs/plans: implementation plan (2026-05-24)
 - [x] repo-001: Repository state reconciliation (2026-05-24)
 - [x] repo-002: Project scaffold (2026-05-24)
+- [x] back-001: FastAPI setup — config, database, main, deps (2026-05-24)
+- [x] back-002: JWT auth — login endpoint, token verification (2026-05-24)
+- [x] back-004: pytest async fixtures with isolated test database (2026-05-24)

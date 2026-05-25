@@ -5,36 +5,34 @@ Updated by Orchestrator at the end of each completed feature.
 
 ## PR under review
 
-- Feature ID: back-001
-- Feature name: FastAPI setup — config, database, main
+- Feature ID: back-003
+- Feature name: SQLAlchemy models and initial Alembic migration
 - Domain: backend-core
 
 ## Review objective
 
-Validate that the backend foundation matches the approved plan, FastAPI setup is coherent, and backend sensors ran successfully.
+Validate that the initial model layer and Alembic migration match the approved spec, integrate cleanly with the backend foundation, and keep sensors green.
 
 ## Expected scope
 
-1. `api/pyproject.toml` with the expected backend dependencies and dev tooling.
-2. `api/.env.example` with DB/auth/API key variables from the approved plan.
-3. `api/app/config.py`, `api/app/database.py`, `api/app/main.py`, and `api/app/deps.py` implemented coherently with `docs/architecture.md`.
-4. Backend virtual environment created and dependencies installed.
-5. Backend sensors executed and reported: `ruff check .`, `mypy .`, `pytest`.
-6. STATUS.json updated (`back-001` done).
-7. HANDOFF.md updated.
+1. `api/app/models/book.py`, `tag.py`, `loan.py`, and `label_template.py` implemented consistently with the approved spec.
+2. Alembic config files and the initial migration exist and are coherent with the SQLAlchemy metadata.
+3. Backend sensors executed and reported: `ruff check .`, `mypy .`, `pytest`.
+4. STATUS.json updated (`back-003` done).
+5. HANDOFF.md updated.
 
 ## Must not be included in this delivery
 
-1. Alembic migration implementation or model/business logic beyond app foundation.
-2. Auth endpoint behavior beyond basic setup files.
-3. Frontend scaffolding or npm dependency installation.
+1. CRUD route/business logic beyond model and migration foundation.
+2. Frontend scaffolding or npm dependency installation.
+3. Export/import implementation beyond schema concerns.
 
 ## Mandatory checklist
 
-1. Backend files align with `docs/superpowers/plans/2026-05-24-personal-library.md` Task 2.
+1. Model files align with the approved spec data model and plan expectations.
 2. Architecture layer names and dependency direction match `docs/architecture.md`.
 3. No hardcoded credentials, tokens, or secrets.
-4. `pyproject.toml` dependency set is sufficient for the declared files and sensors.
+4. Alembic is wired to the correct metadata source.
 5. Sensors actually executed and results are reported accurately.
 6. STATUS.json reflects real state.
 7. HANDOFF.md is current.

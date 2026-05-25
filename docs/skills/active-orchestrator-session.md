@@ -19,8 +19,8 @@ with validated commit + push.
 
 ## Active feature for this session
 
-- Feature ID: back-001
-- Feature name: FastAPI setup — config, database, main
+- Feature ID: back-003
+- Feature name: SQLAlchemy models and initial Alembic migration
 - Domain: backend-core
 
 ## Orchestration steps
