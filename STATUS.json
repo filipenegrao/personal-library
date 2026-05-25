@@ -1,8 +1,8 @@
 {
   "project": "personal-library",
   "last_updated": "2026-05-25",
-  "version": "0.0.0",
-  "release_phase": "backend-models-complete",
+  "version": "0.1.0",
+  "release_phase": "backend-isbn-validate-complete",
   "domains": [
     {
       "name": "foundation",
@@ -62,15 +62,15 @@
     },
     {
       "name": "backend-books",
-      "status": "pending",
+      "status": "in_progress",
       "quality_grade": "N/A",
       "features": [
         {
           "id": "back-005",
           "name": "ISBN EAN-13 validation and normalization",
-          "status": "pending",
-          "tests": false,
-          "notes": "services/isbn_validate.py: normalize_isbn(), validate_isbn13(). 6 unit tests."
+          "status": "done",
+          "tests": true,
+          "notes": "services/isbn_validate.py: normalize_isbn() strips spaces/hyphens, returns digits-only for valid 10/13 digit shapes (full digit check), None otherwise. validate_isbn13() implements EAN-13 checksum. 7 unit tests pass (corrective pass 2026-05-25: fixed partial digit check bug)."
         },
         {
           "id": "back-006",

@@ -458,3 +458,76 @@ Three QA findings addressed:
 
 - **back-008**: Tags and loans CRUD — must resolve `loans.book_id` FK delete policy.
 - **back-005**: ISBN EAN-13 validation and normalization.
+
+---
+
+## 2026-05-25 — back-005: ISBN EAN-13 validation and normalization
+
+### What was done
+
+- Implemented `api/app/services/isbn_validate.py`:
+  - `normalize_isbn(raw: str) -> str | None` — strips spaces and hyphens via regex, returns digits-only ISBN for valid 10 or 13 digit shapes, `None` for invalid input.
+  - `validate_isbn13(isbn: str) -> bool` — standard EAN-13 checksum: alternating weights 1/3 on first 12 digits, check digit mod 10.
+- Implemented `api/tests/test_isbn_validate.py` — 6 unit tests:
+  1. valid ISBN-13 (`9780306406157` → True)
+  2. wrong checksum (`9780306406150` → False)
+  3. too short (`978030640615` → False)
+  4. normalize with hyphens (`978-0-306-40615-7` → `9780306406157`)
+  5. normalize with spaces (`978 0 306 40615 7` → `9780306406157`)
+  6. invalid input (`not-an-isbn` → None)
+
+### Decisions
+
+- Used the straightforward implementation from the plan — `re.sub` for stripping, weighted sum for checksum.
+- `normalize_isbn` accepts both 10 and 13 digit lengths because downstream flows (back-006 ISBN lookup, back-007 CRUD) may receive either input format. The function delegates format-specific validation to `validate_isbn13`.
+- No external dependencies beyond stdlib `re`.
+
+### Sensor results
+
+| Sensor | Result |
+|--------|--------|
+| `ruff check .` | All checks passed |
+| `mypy .` | Success: no issues found in 40 source files |
+| `pytest` | 10 passed (4 existing + 6 new), exit code 0 |
+
+### Follow-ups
+
+- **back-006**: ISBN lookup — Open Library + Google Books fallback.
+- **back-007**: Books CRUD with ISBN lookup endpoint.
+- **back-008**: Tags and loans CRUD — must resolve `loans.book_id` FK delete policy.
+
+---
+
+## 2026-05-25 — back-005 corrective pass (QA)
+
+### What was done
+
+QA rejected `back-005` for a bug in `normalize_isbn()`:
+
+- The line `digits[:12].isdigit()` only checked the first 12 characters of the normalized string. For a 13-character input like `"978030640615X"`, the slice `[:12]` was all digits, so the check passed and the function returned the non-digit string `"978030640615X"` instead of `None`.
+
+**Fix:**
+
+- Changed `digits[:12].isdigit()` → `digits.isdigit()` — validates the entire normalized string.
+- Added regression test `test_normalize_isbn_nondigit_last_char` asserting `normalize_isbn("978030640615X") is None`.
+
+**Design note:** ISBN-10 values ending in `X` (a valid checksum digit in ISBN-10) are intentionally rejected by `normalize_isbn`. This function's contract is digits-only normalization; ISBN-10 `X` handling is not in scope for this slice.
+
+### Decisions
+
+- Used the minimal fix: replace the partial digit slice with a full `isdigit()` call. The length check already guards against empty strings, so `isdigit()` on the full string is safe.
+- Did not broaden `normalize_isbn` to accept ISBN-10 trailing `X` — that would change the contract and expand scope.
+
+### Sensor results
+
+| Sensor | Result |
+|--------|--------|
+| `ruff check .` | All checks passed |
+| `mypy .` | Success: no issues found in 40 source files |
+| `pytest` | 11 passed (7 ISBN tests), exit code 0 |
+
+### Follow-ups
+
+- **back-006**: ISBN lookup — Open Library + Google Books fallback.
+- **back-007**: Books CRUD with ISBN lookup endpoint.
+- **back-008**: Tags and loans CRUD — must resolve `loans.book_id` FK delete policy.
