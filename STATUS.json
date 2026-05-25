@@ -1,8 +1,8 @@
 {
   "project": "personal-library",
-  "last_updated": "2026-05-24",
+  "last_updated": "2026-05-25",
   "version": "0.0.0",
-  "release_phase": "backend-auth-complete",
+  "release_phase": "backend-models-complete",
   "domains": [
     {
       "name": "foundation",
@@ -47,9 +47,9 @@
         {
           "id": "back-003",
           "name": "SQLAlchemy models and initial Alembic migration",
-          "status": "pending",
+          "status": "done",
           "tests": false,
-          "notes": "models/book.py, tag.py, loan.py, label_template.py. alembic init, env.py, 0001_initial_schema migration."
+          "notes": "Models: Book (books, authors JSONB, Mapped[list[str]]), Tag + BookTag (tags, book_tags, ondelete=CASCADE on book_id, RESTRICT on tag_id), Loan (loans, book_id ondelete undefined — open decision for back-008), LabelTemplate (label_templates). SQLAlchemy 2 typed ORM with UUID PKs, timezone-aware datetimes. Alembic: alembic.ini, async env.py, concrete 0001_initial_schema.py (5 tables, FKs with ondelete rules, index on books.isbn_13). Added bcrypt to pyproject.toml. Corrective pass (2026-05-25): typed authors as list[str], aligned to JSONB, made FK ondelete policies explicit."
         },
         {
           "id": "back-004",
@@ -191,6 +191,7 @@
   "open_decisions": [
     "Confirm PostgreSQL install method for local dev: Docker or native.",
     "Confirm Google Books API key requirement (optional in spec — key is optional, lookup still works without it).",
-    "Production deployment details: nginx config, systemd units, env management on VPS."
+    "Production deployment details: nginx config, systemd units, env management on VPS.",
+    "loans.book_id FK delete policy (RESTRICT vs CASCADE vs SET NULL) — resolve in back-008."
   ]
 }

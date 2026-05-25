@@ -18,7 +18,7 @@ Updated: 2026-05-24 (backend-core auth/foundation complete)
 
 - [x] back-001: FastAPI setup — config, database, main, deps (done — 2026-05-24)
 - [x] back-002: JWT auth — login endpoint, token verification (done — 2026-05-24)
-- [ ] back-003: SQLAlchemy models + initial Alembic migration
+- [x] back-003: SQLAlchemy models + initial Alembic migration (done — 2026-05-25, corrective pass 2026-05-25: typed authors list[str], JSONB alignment, FK ondelete policies)
 - [x] back-004: pytest async fixtures with isolated test database (done — 2026-05-24)
 
 ## Backend — Books

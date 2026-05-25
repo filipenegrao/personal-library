@@ -376,3 +376,85 @@ QA found that `pytest` (the console script) still failed while `python -m pytest
 - **back-006**: ISBN lookup — Open Library + Google Books.
 - **back-007**: Books CRUD with ISBN lookup endpoint.
 - **front-001**: Next.js scaffold (can run in parallel).
+
+---
+
+## 2026-05-25 — back-003: SQLAlchemy models and initial Alembic migration
+
+### What was done
+
+**Models (SQLAlchemy 2 typed ORM):**
+- Implemented `api/app/models/book.py` — `Book` model with UUID PK, isbn_13 (indexed), isbn_10, title, subtitle, authors (JSONB with default `[]`), publisher, published_year, language, pages, cover_url, dewey_code, notes, created_at (tz-aware, default UTC now). Relationships: `book_tags` (cascade delete-orphan), `loans`.
+- Implemented `api/app/models/tag.py` — `Tag` (UUID PK, unique name, color default `#6366f1`) and `BookTag` (composite PK: book_id + tag_id, FKs to books and tags). Bi-directional relationships.
+- Implemented `api/app/models/loan.py` — `Loan` (UUID PK, book_id FK, borrower_name, loaned_at tz-aware default UTC now, due_date nullable, returned_at nullable, notes). Relationship back to Book.
+- Implemented `api/app/models/label_template.py` — `LabelTemplate` (UUID PK, name, width_mm default 50.0, height_mm default 30.0, font_size default 8, show_dewey/show_title/show_barcode defaults True, created_at tz-aware).
+- Implemented `api/app/models/__init__.py` — exports all 5 models; importing `app.models` registers every table on `Base.metadata`.
+
+**Alembic:**
+- Created `api/alembic.ini` — valid config, blank `sqlalchemy.url` (runtime from `settings`).
+- Created `api/alembic/env.py` — loads `settings.database_url`, sets `target_metadata = Base.metadata`, imports `app.models` for autogenerate, supports offline and async online migrations.
+- Created `api/alembic/versions/0001_initial_schema.py` — concrete migration with `upgrade()` (creates all 5 tables, PKs, FKs, unique constraint on tags.name, index on books.isbn_13) and `downgrade()` (drops all tables in reverse dependency order).
+
+**Supporting fix:**
+- Added `bcrypt>=4.0` to `api/pyproject.toml` dependencies — was installed but missing from the dependency list since back-002.
+
+### Decisions
+
+- Used `from __future__ import annotations` + `TYPE_CHECKING` imports to resolve cross-model forward references (Book ↔ BookTag, Book ↔ Loan) without introducing circular imports at runtime.
+- Used `sqlalchemy.dialects.postgresql.UUID(as_uuid=True)` for all UUID columns — PostgreSQL-native type with Python `uuid.UUID` mapping.
+- Authors field uses `JSON` type with `default=list` in the ORM and `server_default='[]'::jsonb` in the migration — ensures empty array default at both Python and DB levels.
+- Migration uses `server_default=sa.text("now()")` for timestamp columns — delegates default to PostgreSQL's `now()` function, consistent with the ORM's `default=lambda: datetime.now(timezone.utc)`.
+- Label template defaults (50.0, 30.0, 8, True) are set as ORM Python defaults AND migration server defaults for consistency.
+- `alembic.ini` leaves `sqlalchemy.url` blank — runtime URL comes from `settings.database_url` in `env.py`.
+
+### Sensor results
+
+| Sensor | Result |
+|--------|--------|
+| `ruff check .` | All checks passed |
+| `mypy .` | Success: no issues found in 40 source files |
+| `pytest` | 4 passed, exit code 0 |
+
+### Follow-ups
+
+- **back-005**: ISBN EAN-13 validation and normalization.
+- **back-006**: ISBN lookup — Open Library + Google Books fallback.
+- **back-007**: Books CRUD with ISBN lookup endpoint (will also add model-level integration tests).
+- **front-001**: Next.js scaffold (can run in parallel).
+
+---
+
+## 2026-05-25 — back-003 corrective pass (QA)
+
+### What was done
+
+Three QA findings addressed:
+
+1. **Type annotation fix**: `authors: Mapped[list]` → `Mapped[list[str]]` in `api/app/models/book.py`. The untyped `list` was too permissive for a column that stores author name strings.
+
+2. **JSONB alignment**: Switched `authors` column from generic `sqlalchemy.JSON` to `sqlalchemy.dialects.postgresql.JSONB` in both the Book model and `0001_initial_schema.py`. The architecture doc explicitly states `authors (jsonb)`. Since no production DB exists, the initial migration was amended directly.
+
+3. **Delete policy documented and made explicit**:
+   - `book_tags.book_id → books.id`: Added `ondelete="CASCADE"` to both model FK and migration FK. This aligns DB-level behavior with the existing ORM `cascade="all, delete-orphan"` on `Book.book_tags`. Deleting a book now correctly cascades to delete its tag associations at both levels.
+   - `book_tags.tag_id → tags.id`: Added `ondelete="RESTRICT"` — was previously implicit (NO ACTION). Prevents deleting a tag that is still associated with books.
+   - `loans.book_id → books.id`: Left as implicit RESTRICT (no `ondelete` clause). This is an **open decision** for `back-008` — should deleting a book preserve its loan history, cascade-delete it, or set it to NULL? Currently, PostgreSQL will reject a book delete if loans reference it.
+
+### Decisions
+
+- Amending `0001_initial_schema.py` directly is safe because no production database has been deployed with this migration. The repo is pre-first-real-deploy.
+- `ondelete="CASCADE"` on `book_tags.book_id` mirrors the ORM cascade and is defensive: if someone bypasses the ORM (raw SQL delete), the DB still enforces the expected behavior.
+- `ondelete="RESTRICT"` on `book_tags.tag_id` is a defensive guard: deleting a tag should not silently destroy book associations. This is the safe default for a catalog app.
+- `loans.book_id` delete policy is deferred to `back-008` because the product spec doesn't define whether loan history should survive book deletion. Both RESTRICT (protect history) and CASCADE (clean removal) are reasonable; the implementer must reconcile with the catalog workflow.
+
+### Sensor results
+
+| Sensor | Result |
+|--------|--------|
+| `ruff check .` | All checks passed |
+| `mypy .` | Success: no issues found in 40 source files |
+| `pytest` | 4 passed, exit code 0 |
+
+### Follow-ups
+
+- **back-008**: Tags and loans CRUD — must resolve `loans.book_id` FK delete policy.
+- **back-005**: ISBN EAN-13 validation and normalization.
