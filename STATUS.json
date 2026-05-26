@@ -2,7 +2,7 @@
   "project": "personal-library",
   "last_updated": "2026-05-25",
   "version": "0.1.0",
-  "release_phase": "backend-isbn-lookup-complete",
+  "release_phase": "backend-books-complete",
   "domains": [
     {
       "name": "foundation",
@@ -82,9 +82,9 @@
         {
           "id": "back-007",
           "name": "Books CRUD with ISBN lookup endpoint",
-          "status": "pending",
-          "tests": false,
-          "notes": "schemas/book.py, routers/books.py. Endpoints: POST /books/, GET /books/, GET /books/{id}, PATCH /books/{id}, DELETE /books/{id}, GET /books/lookup/{isbn}. 6 tests."
+          "status": "done",
+          "tests": true,
+          "notes": "schemas/book.py: BookCreate, BookUpdate, BookOut, TagOut. routers/books.py: POST /books/ (201 + tag attach), GET /books/ (list with search/language/tag_id filters), GET /books/{id}, PATCH /books/{id} (partial update, tag replacement), DELETE /books/{id} (204), GET /books/lookup/{isbn} (validate + look up + fill isbn_13 from input). 12 tests pass (9 ORM, 3 HTTP with mocked lookup). Infrastructure: test_engine switched to function scope to fix asyncpg event-loop mismatch."
         }
       ]
     },

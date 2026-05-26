@@ -568,3 +568,55 @@ QA rejected `back-005` for a bug in `normalize_isbn()`:
 
 - **back-007**: Books CRUD with ISBN lookup endpoint — will wire `lookup_isbn` into the `GET /books/lookup/{isbn}` endpoint.
 - **back-008**: Tags and loans CRUD — must resolve `loans.book_id` FK delete policy.
+
+---
+
+## 2026-05-25 — back-007: Books CRUD with ISBN lookup endpoint
+
+### What was done
+
+**Schemas** (`api/app/schemas/book.py`):
+- `TagOut` — id, name, color with `from_attributes=True`.
+- `BookCreate` — all book fields + `tag_ids` for tag association during creation.
+- `BookUpdate` — same shape as BookCreate but all fields optional, `tag_ids` defaults to `None` (meaning "don't change tags").
+- `BookOut` — all persisted fields + `created_at` + `tags: list[TagOut]`.
+
+**Router** (`api/app/routers/books.py`):
+- `GET /books/lookup/{isbn}` — normalizes ISBN via `normalize_isbn`, validates EAN-13 checksum, calls `lookup_isbn`. Returns 422 for invalid ISBN, 404 if not found. Fills `isbn_13` from the validated input if the service result omits it (Open Library doesn't populate `isbn_13`/`isbn_10`).
+- `POST /books/` — creates a book and optionally attaches tags via `BookTag` join table. Returns 201.
+- `GET /books/` — lists books with optional `search` (ilike on title/subtitle), `language` (exact match), `tag_id` (exists in book_tags) filters. Ordered by `created_at` desc.
+- `GET /books/{book_id}` — fetches single book with tags via `selectinload`, or 404.
+- `PATCH /books/{book_id}` — partial update via `model_dump(exclude_unset=True)`. When `tag_ids` is explicitly provided (not `None`), deletes existing `BookTag` rows and inserts new ones.
+- `DELETE /books/{book_id}` — deletes and returns 204.
+- Helpers: `_book_to_out` (maps ORM Book + nested BookTag.tag to BookOut), `_get_book_or_404` (loads with joined tags), `_sync_tags` (bulk inserts BookTag rows).
+
+**Tests** (`api/tests/test_books.py`):
+- 9 ORM-level tests using `db_session`: create, list (ordered desc), get, get 404, update, delete + verify 404, create with tags, filter by tag, search.
+- 3 HTTP-level lookup tests using `auth_client` + `unittest.mock.patch` to mock `lookup_isbn`: invalid ISBN → 422, success → 200 with `isbn_13` filled from input, not found → 404.
+
+### Infrastructure fix
+
+**Event loop mismatch** — session-scoped `test_engine` in pytest-asyncio 1.3.0 + asyncpg causes `RuntimeError: Task got Future attached to a different loop`. The asyncpg connection pool creates connections in one event loop, but function-scoped tests run in different loops.
+
+**Fix:** Changed `test_engine` from `scope="session"` to function-scoped. Each test gets its own engine, connection pool, and fresh schema (drop_all + create_all per test). Slightly slower but avoids the event loop issue entirely.
+
+### Decisions
+
+- Lookup endpoint fills missing `isbn_13` from validated input at the router boundary — avoids modifying `back-006` service layer. Open Library's API returns no ISBN identifiers; Google Books does. The router ensures callers always get a stable `isbn_13` field.
+- Search on `Book.title.ilike` and `Book.subtitle.ilike` only — does not search `authors` JSONB column due to complexity of text casting on JSONB. This is adequate for MVP and can be extended later.
+- Tag sync on PATCH uses delete-all + re-insert strategy — simpler than computing diffs, correct for small cardinality.
+- `db_session.commit()` in tests needs data to persist within the same engine scope. With function-scoped engine, each test has its own schema, so data naturally resets between tests.
+
+### Sensor results
+
+| Sensor | Result |
+|--------|--------|
+| `ruff check .` | All checks passed |
+| `mypy .` | Success: no issues found in 40 source files |
+| `pytest` | 26 passed, exit code 0 |
+
+### Follow-ups
+
+- **back-008**: Tags and loans CRUD — must resolve `loans.book_id` FK delete policy.
+- **back-009**: Label templates and PDF generation.
+- **back-010**: BibTeX and CSV export.

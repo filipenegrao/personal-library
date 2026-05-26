@@ -4,7 +4,6 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-# Seed required settings before app.config is imported anywhere in pytest startup.
 os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://localhost/personal_library")
 os.environ.setdefault(
     "TEST_DATABASE_URL", "postgresql+asyncpg://localhost/personal_library_test"
@@ -23,7 +22,7 @@ TEST_URL = settings.test_database_url or settings.database_url.replace(
 )
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture
 async def test_engine():
     engine = create_async_engine(TEST_URL, echo=False)
     async with engine.begin() as conn:
