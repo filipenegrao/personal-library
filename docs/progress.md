@@ -3,7 +3,7 @@
 > Human-readable backlog. **Canonical task state is `STATUS.json`.**
 > Align checkboxes with `STATUS.json` when features move.
 
-Updated: 2026-05-25 (back-005 corrective pass)
+Updated: 2026-05-25 (back-006 complete)
 
 ---
 
@@ -24,7 +24,7 @@ Updated: 2026-05-25 (back-005 corrective pass)
 ## Backend — Books
 
 - [x] back-005: ISBN EAN-13 validation and normalization (done — 2026-05-25, corrective pass 2026-05-25: fixed partial digit check bug, added regression test for non-digit last char)
-- [ ] back-006: ISBN lookup — Open Library + Google Books fallback
+- [x] back-006: ISBN lookup — Open Library + Google Books fallback (done — 2026-05-25)
 - [ ] back-007: Books CRUD with ISBN lookup endpoint
 
 ## Backend — Catalog Features

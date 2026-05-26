@@ -2,7 +2,7 @@
   "project": "personal-library",
   "last_updated": "2026-05-25",
   "version": "0.1.0",
-  "release_phase": "backend-isbn-validate-complete",
+  "release_phase": "backend-isbn-lookup-complete",
   "domains": [
     {
       "name": "foundation",
@@ -75,9 +75,9 @@
         {
           "id": "back-006",
           "name": "ISBN lookup — Open Library with Google Books fallback",
-          "status": "pending",
-          "tests": false,
-          "notes": "services/isbn_lookup.py: lookup_isbn(), BookData dataclass. respx mocks for 3 integration tests."
+          "status": "done",
+          "tests": true,
+          "notes": "services/isbn_lookup.py: BookData dataclass, lookup_isbn() (Open Library first, Google Books fallback), async httpx with 10s timeout. Google Books includes API key only if settings.google_books_api_key is set. Broad exception handling returns None. 3 respx-mocked integration tests pass."
         },
         {
           "id": "back-007",

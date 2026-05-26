@@ -531,3 +531,40 @@ QA rejected `back-005` for a bug in `normalize_isbn()`:
 - **back-006**: ISBN lookup — Open Library + Google Books fallback.
 - **back-007**: Books CRUD with ISBN lookup endpoint.
 - **back-008**: Tags and loans CRUD — must resolve `loans.book_id` FK delete policy.
+
+---
+
+## 2026-05-25 — back-006: ISBN lookup — Open Library + Google Books fallback
+
+### What was done
+
+- Implemented `api/app/services/isbn_lookup.py`:
+  - `BookData` dataclass — 10 fields (title, authors, publisher, published_year, pages, language, cover_url, isbn_13, isbn_10, dewey_code).
+  - `lookup_isbn(isbn: str) -> BookData | None` — tries Open Library first, falls back to Google Books on miss.
+  - `_try_open_library(isbn: str) -> BookData | None` — queries `https://openlibrary.org/api/books` with `bibkeys=ISBN:{isbn}`, `format=json`, `jscmd=data`. Parses `title`, `authors[].name`, first publisher, year from `publish_date` (regex), `number_of_pages`, cover URL (medium or small). Returns `None` if request fails or ISBN key absent.
+  - `_try_google_books(isbn: str) -> BookData | None` — queries `https://www.googleapis.com/books/v1/volumes` with `q=isbn:{isbn}`. Includes `key` param only if `settings.google_books_api_key` is non-empty. Parses first item from `items[0].volumeInfo`: title, authors, publisher, year from `publishedDate` (first 4 digits), page count, language, cover thumbnail, ISBN_13/ISBN_10 from `industryIdentifiers`. Returns `None` if request fails, `totalItems` is falsey, or no items.
+  - Broad `except Exception` returns `None` for transient errors — keeps the MVP lookup non-fatal.
+- Implemented `api/tests/test_isbn_lookup.py` — 3 async `respx`-mocked tests:
+  1. Open Library success: mock returns full book data, asserts title/authors/publisher parsed.
+  2. Google Books fallback: Open Library returns `{}`, Google Books returns one item with `totalItems: 1`, asserts title parsed.
+  3. Both fail: Open Library returns `{}`, Google Books returns `totalItems: 0`, asserts `None`.
+
+### Decisions
+
+- Used `httpx.AsyncClient(timeout=10)` — 10-second timeout prevents hanging on slow APIs.
+- Google Books API key is optional and conditionally included — no hard dependency on a real key. Without it, requests still work but may hit default rate limits.
+- ISBN normalization is NOT performed in the lookup service — the caller (router in back-007) is responsible for normalizing/validating the ISBN before calling `lookup_isbn`. This keeps services decoupled.
+- Used `re.search(r"\d{4}", ...)` for year extraction from both APIs — handles varied date formats (`"2005"`, `"Jan 2005"`, `"2005-01-01"`).
+
+### Sensor results
+
+| Sensor | Result |
+|--------|--------|
+| `ruff check .` | All checks passed |
+| `mypy .` | Success: no issues found in 40 source files |
+| `pytest` | 14 passed, exit code 0 |
+
+### Follow-ups
+
+- **back-007**: Books CRUD with ISBN lookup endpoint — will wire `lookup_isbn` into the `GET /books/lookup/{isbn}` endpoint.
+- **back-008**: Tags and loans CRUD — must resolve `loans.book_id` FK delete policy.
