@@ -620,3 +620,62 @@ QA rejected `back-005` for a bug in `normalize_isbn()`:
 - **back-008**: Tags and loans CRUD — must resolve `loans.book_id` FK delete policy.
 - **back-009**: Label templates and PDF generation.
 - **back-010**: BibTeX and CSV export.
+
+---
+
+## 2026-05-25 — back-008: Tags and loans CRUD
+
+### What was done
+
+**Tag schemas** (`api/app/schemas/tag.py`):
+- `TagCreate` — name (required), color (default `#6366f1`).
+- `TagUpdate` — name and color, both optional, for partial updates.
+- `TagOut` — id, name, color with `from_attributes=True`.
+
+**Loan schemas** (`api/app/schemas/loan.py`):
+- `LoanCreate` — book_id, borrower_name, due_date (optional), notes (optional).
+- `LoanReturn` — returned_at (optional, defaults to UTC now in the endpoint).
+- `LoanOut` — id, book_id, borrower_name, loaned_at, due_date, returned_at, notes with `from_attributes=True`.
+
+**Tags router** (`api/app/routers/tags.py`):
+- `POST /tags/` — create tag (201).
+- `GET /tags/` — list tags ordered by name.
+- `PATCH /tags/{tag_id}` — partial update (name/color), 404 on missing.
+- `DELETE /tags/{tag_id}` — delete tag (204). If the tag is in use (has associated BookTag rows), catches the DB `IntegrityError` from the `ON DELETE RESTRICT` FK and returns 409 Conflict.
+
+**Loans router** (`api/app/routers/loans.py`):
+- `POST /loans/` — create loan. Validates `book_id` exists before writing (404 if not found). Returns 201.
+- `GET /loans/` — list loans ordered by `loaned_at` desc. Supports `open_only=true` filter (excludes returned loans).
+- `POST /loans/{loan_id}/return` — mark loan as returned. Sets `returned_at` to provided datetime or current UTC. 404 on missing loan.
+
+**Model fix** — Tag.book_tags relationship:
+- Added `passive_deletes=True` to `Tag.book_tags` relationship. Without it, SQLAlchemy's ORM tried to blank-out the `book_tags.tag_id` column (which is part of the composite PK) when deleting a Tag. `passive_deletes=True` tells the ORM to let the DB handle the FK constraint, so the `ON DELETE RESTRICT` raises an `IntegrityError` that the router catches and converts to 409.
+
+**Tests**:
+- `api/tests/test_tags.py` — 6 HTTP tests: create tag (201 + verify fields), list tags (ordered by name), update tag (partial), delete tag (verify absent from list), 404 on missing tag (via PATCH), 409 on delete of in-use tag.
+- `api/tests/test_loans.py` — 6 HTTP tests: create loan, create loan with nonexistent book → 404, return loan, return nonexistent loan → 404, list loans, open_only filter excludes returned loans.
+
+### `loans.book_id` delete policy — resolved
+
+**Decision: kept as implicit RESTRICT** (no `ondelete` clause on FK). PostgreSQL's `NO ACTION` means deleting a book with active loans will fail. This preserves loan history and prevents accidental deletion of books with loan records. The open decision in STATUS.json is now closed.
+
+### Decisions
+
+- Used `passive_deletes=True` on `Tag.book_tags` instead of checking tag usage with a pre-delete query. The DB-level constraint already exists, and catching the `IntegrityError` is simpler, atomic, and avoids a race condition.
+- Loan `book_id` existence is validated with a `SELECT Book.id` before insert rather than relying on FK violation. This gives a clear 404 "Book not found" instead of a generic 500 on FK error.
+- `returned_at` defaults to `datetime.now(timezone.utc)` in the endpoint, not in the schema default — keeps the schema clean and the behavior explicit in the router.
+- No `GET /tags/{tag_id}` endpoint — not required by the plan. Single-tag lookup can be done via the list endpoint if needed.
+
+### Sensor results
+
+| Sensor | Result |
+|--------|--------|
+| `ruff check .` | All checks passed |
+| `mypy .` | Success: no issues found in 40 source files |
+| `pytest` | 38 passed, exit code 0 |
+
+### Follow-ups
+
+- **back-009**: Label templates and PDF generation (reportlab).
+- **back-010**: BibTeX and CSV export.
+- **back-011**: CSV and BibTeX import.

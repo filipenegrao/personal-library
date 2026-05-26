@@ -2,7 +2,7 @@
   "project": "personal-library",
   "last_updated": "2026-05-25",
   "version": "0.1.0",
-  "release_phase": "backend-books-complete",
+  "release_phase": "backend-catalog-partial",
   "domains": [
     {
       "name": "foundation",
@@ -90,15 +90,15 @@
     },
     {
       "name": "backend-catalog",
-      "status": "pending",
+      "status": "in_progress",
       "quality_grade": "N/A",
       "features": [
         {
           "id": "back-008",
           "name": "Tags and loans CRUD",
-          "status": "pending",
-          "tests": false,
-          "notes": "schemas/tag.py, schemas/loan.py, routers/tags.py, routers/loans.py. Tags: create/list/update/delete. Loans: create, list (open_only filter), return endpoint."
+          "status": "done",
+          "tests": true,
+          "notes": "schemas/tag.py: TagCreate, TagUpdate, TagOut. schemas/loan.py: LoanCreate, LoanReturn, LoanOut. routers/tags.py: POST/GET/PATCH/DELETE /tags/, graceful 409 on delete of in-use tag (passive_deletes=True on Tag.book_tags). routers/loans.py: POST /loans/ (validates book_id exists), GET /loans/ (ordered desc, open_only filter), POST /loans/{id}/return (defaults returned_at to UTC now). 12 HTTP tests pass. loans.book_id delete policy: resolved as implicit RESTRICT (preserves loan history, DB rejects book delete with active loans)."
         },
         {
           "id": "back-009",
@@ -191,7 +191,6 @@
   "open_decisions": [
     "Confirm PostgreSQL install method for local dev: Docker or native.",
     "Confirm Google Books API key requirement (optional in spec — key is optional, lookup still works without it).",
-    "Production deployment details: nginx config, systemd units, env management on VPS.",
-    "loans.book_id FK delete policy (RESTRICT vs CASCADE vs SET NULL) — resolve in back-008."
+    "Production deployment details: nginx config, systemd units, env management on VPS."
   ]
 }

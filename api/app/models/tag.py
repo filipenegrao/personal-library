@@ -23,7 +23,9 @@ class Tag(Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     color: Mapped[str] = mapped_column(String(7), nullable=False, default="#6366f1")
 
-    book_tags: Mapped[list["BookTag"]] = relationship(back_populates="tag")
+    book_tags: Mapped[list["BookTag"]] = relationship(
+        back_populates="tag", passive_deletes=True
+    )
 
 
 class BookTag(Base):
