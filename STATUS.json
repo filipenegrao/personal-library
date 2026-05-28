@@ -1,7 +1,7 @@
 {
   "project": "personal-library",
   "last_updated": "2026-05-28",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "release_phase": "frontend-scaffold",
   "domains": [
     {
@@ -146,15 +146,15 @@
     },
     {
       "name": "frontend-catalog",
-      "status": "pending",
+      "status": "in_progress",
       "quality_grade": "N/A",
       "features": [
         {
           "id": "front-003",
           "name": "Book catalog page — grid/list view with search and filters",
-          "status": "pending",
+          "status": "done",
           "tests": false,
-          "notes": "app/catalog/page.tsx. Search bar, tag/language/loan-status filters, sort controls. Grid (covers) and list toggle."
+          "notes": "app/catalog/page.tsx — async Server Component, awaits searchParams (Promise in Next.js 16), fetches GET /books/ with Bearer token, renders 2-6 col responsive grid. CatalogFilters client component for search (Enter-to-submit) and language select (immediate). Card + Select shadcn-style UI components added. API param mapping: ?q= → search, ?lang= → language."
         },
         {
           "id": "front-004",

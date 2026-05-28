@@ -920,3 +920,25 @@ QA rejected `back-005` for a bug in `normalize_isbn()`:
 ### Follow-ups
 
 - `front-003`: Book catalog page. Address deferred items: ?from= redirect, server-only import, aria-invalid fix, frontend test runner.
+
+## 2026-05-28 — front-003: Book catalog page
+
+### What was done
+
+**Deferred items from front-002 addressed:**
+1. `src/lib/config.ts` — added `import 'server-only'` as first line.
+2. `src/app/login/page.tsx` — removed `aria-invalid` from both Input fields; added `aria-describedby="login-error"` on the form and `id="login-error"` on the error paragraph.
+3. `src/app/login/page.tsx` — wired `?from=` redirect: split into inner `LoginForm` (uses `useSearchParams`) wrapped in `<Suspense>` by the outer `LoginPage`; after login, validates `from` starts with `/` and not `//`, then `router.push(dest)`.
+
+**front-003 implemented:**
+- `src/app/catalog/page.tsx` — async Server Component; awaits `searchParams` prop (`Promise<{q?, lang?}>`); reads auth token via `getToken()`; fetches `GET /books/?search=&language=` with `Authorization: Bearer` header; renders a 2–6 column responsive grid of `BookCard` components.
+- `src/components/catalog-filters.tsx` — Client Component; receives `q` and `lang` props; search input (submits on Enter) + language select (updates immediately); uses `useRouter` + `usePathname` to push updated URL params.
+- `src/components/ui/card.tsx` — NEW: minimal shadcn-style `Card` + `CardContent`.
+- `src/components/ui/select.tsx` — NEW: styled native `<select>` wrapper.
+
+### Sensor results
+
+| Sensor | Result |
+|--------|--------|
+| `npm run lint` | Passed (0 warnings, 0 errors) |
+| `npm run build` | Passed — /catalog now ƒ (dynamic), /login ○ (static) |

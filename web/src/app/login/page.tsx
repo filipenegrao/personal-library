@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { login } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -23,7 +25,10 @@ export default function LoginPage() {
 
     try {
       await login(username, password);
-      router.push("/catalog");
+      const from = searchParams.get("from") ?? "";
+      const dest =
+        from.startsWith("/") && !from.startsWith("//") ? from : "/catalog";
+      router.push(dest);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -41,7 +46,11 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+          aria-describedby={error !== null ? "login-error" : undefined}
+        >
           <div className="space-y-1.5">
             <Label htmlFor="username">Username</Label>
             <Input
@@ -51,7 +60,6 @@ export default function LoginPage() {
               autoComplete="username"
               required
               disabled={pending}
-              aria-invalid={error !== null}
             />
           </div>
 
@@ -64,12 +72,11 @@ export default function LoginPage() {
               autoComplete="current-password"
               required
               disabled={pending}
-              aria-invalid={error !== null}
             />
           </div>
 
           {error !== null && (
-            <p className="text-sm text-destructive" role="alert">
+            <p id="login-error" className="text-sm text-destructive" role="alert">
               {error}
             </p>
           )}
@@ -80,5 +87,13 @@ export default function LoginPage() {
         </form>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }
