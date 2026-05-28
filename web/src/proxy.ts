@@ -10,7 +10,10 @@ export function proxy(request: NextRequest) {
 
   if (!token && !isPublic) {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("from", pathname);
+    // Only pass safe relative paths to prevent open-redirect
+    if (pathname.startsWith("/") && !pathname.startsWith("//")) {
+      loginUrl.searchParams.set("from", pathname);
+    }
     return NextResponse.redirect(loginUrl);
   }
 

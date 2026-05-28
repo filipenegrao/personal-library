@@ -890,3 +890,33 @@ QA rejected `back-005` for a bug in `normalize_isbn()`:
 ### Follow-ups
 
 - `front-002`: Login page UI (form, POST to `/auth/login` via `login` server action). Address all QA/Security advisories in this slice.
+
+## 2026-05-28 — front-002: Login page UI
+
+### What was done
+
+- Created `web/src/lib/config.ts` — shared `API_URL` constant from `process.env.API_URL` (server-only, no NEXT_PUBLIC_ prefix)
+- Refactored `web/src/lib/api.ts` — imports `API_URL` from `./config` instead of inline constant
+- Refactored `web/src/lib/auth.ts` — imports `API_URL` from `./config`; `login()` now uses `apiFetch` from `api.ts` instead of raw `fetch`; removed `redirect('/catalog')` from `login()` (client handles navigation)
+- Updated `web/.env.local.example` — renamed `NEXT_PUBLIC_API_URL` to `API_URL`
+- Fixed open-redirect in `web/src/proxy.ts` — validates `?from=` param is a safe relative path (starts with `/`, not `//`)
+- Added `web/src/components/ui/input.tsx` and `web/src/components/ui/label.tsx` (shadcn-style, no new packages)
+- Implemented `web/src/app/login/page.tsx` — client component with username+password form, inline error display, `router.push('/catalog')` on success
+
+### Sensor results
+
+| Sensor | Result |
+|--------|--------|
+| `npm run lint` | Passed (0 warnings, 0 errors) |
+| `npm run build` | Passed — routes: /, /_not-found, /catalog, /login + Proxy |
+
+### Gate results
+
+| Gate | Result |
+|------|--------|
+| QA | APPROVED_WITH_RESERVATIONS — no blockers; deferred to front-003: wire ?from= redirect, add server-only to config.ts, fix aria-invalid scope, add frontend test runner |
+| Security | ADVISORY — postcss CVE carry-forward; config.ts server-only guard needed |
+
+### Follow-ups
+
+- `front-003`: Book catalog page. Address deferred items: ?from= redirect, server-only import, aria-invalid fix, frontend test runner.

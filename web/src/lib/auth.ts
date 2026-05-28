@@ -2,22 +2,23 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { apiFetch, ApiError } from "./api";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const COOKIE_NAME = "access_token";
 
 export async function login(username: string, password: string): Promise<void> {
-  const res = await fetch(`${API_URL}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
-  });
-
-  if (!res.ok) {
-    throw new Error("Invalid credentials");
+  let data: { access_token: string };
+  try {
+    data = await apiFetch<{ access_token: string }>("/auth/login", {
+      method: "POST",
+      body: { username, password },
+    });
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 401) {
+      throw new Error("Invalid credentials");
+    }
+    throw new Error("Login failed. Please try again.");
   }
-
-  const data = (await res.json()) as { access_token: string };
 
   const store = await cookies();
   store.set(COOKIE_NAME, data.access_token, {
@@ -27,8 +28,6 @@ export async function login(username: string, password: string): Promise<void> {
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
-
-  redirect("/catalog");
 }
 
 export async function logout(): Promise<void> {

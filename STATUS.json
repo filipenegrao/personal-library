@@ -138,9 +138,9 @@
         {
           "id": "front-002",
           "name": "Login page",
-          "status": "pending",
+          "status": "done",
           "tests": false,
-          "notes": "web/src/app/login/page.tsx. Client component. POST to /auth/login, stores token via server action, redirects to /catalog."
+          "notes": "web/src/app/login/page.tsx. Client component with username+password form (shadcn/ui Input/Label/Button). Calls login() server action, router.push('/catalog') on success, inline error display. QA/Security items from front-001 addressed: API_URL extracted to config.ts, auth.ts refactored to use apiFetch, NEXT_PUBLIC_ prefix removed, open-redirect fixed in proxy.ts."
         }
       ]
     },
