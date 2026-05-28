@@ -679,3 +679,91 @@ QA rejected `back-005` for a bug in `normalize_isbn()`:
 - **back-009**: Label templates and PDF generation (reportlab).
 - **back-010**: BibTeX and CSV export.
 - **back-011**: CSV and BibTeX import.
+
+---
+
+## 2026-05-26 — back-009: Label templates and PDF generation
+
+### What was done
+
+**Schemas** (`api/app/schemas/label_template.py`):
+- `LabelTemplateCreate` — name (required), width_mm (50.0), height_mm (30.0), font_size (8), show_dewey/show_title/show_barcode (True).
+- `LabelTemplateOut` — all fields + id, created_at with `from_attributes=True`.
+- `LabelGenerateRequest` — book_ids (list[uuid.UUID]), template_id (uuid.UUID).
+
+**PDF service** (`api/app/services/pdf_labels.py`):
+- `generate_labels_pdf(books, template) -> bytes` — ReportLab Canvas, page size from template dimensions (mm), Code128 barcode from `book.isbn_13`, optional dewey/title/barcode sections, one label per page, raw bytes output.
+
+**Router** (`api/app/routers/labels.py`):
+- `POST /labels/templates/` (201), `GET /labels/templates/`, `DELETE /labels/templates/{id}` (204), `POST /labels/generate` (200, `application/pdf`).
+- Auth required on all endpoints.
+- 404 on missing template or no books found.
+
+**Tests** (`api/tests/test_labels.py`):
+- 8 HTTP tests: create template (verify all defaults), list templates, delete + verify absent, template not found → 404, generate PDF (Content-Type, non-trivial length), template not found → 404 on generate, empty book_ids → 404, bogus book_ids → 404.
+
+### Decisions
+
+- Used single `from reportlab.lib.units import mm` instead of dual import from both `units` and `pagesizes` — ruff flagged the redefinition.
+- `show_barcode` gracefully handles missing `isbn_13` (book without ISBN) and barcode rendering exceptions — no PDF generation failure on missing data.
+- PDF generation is synchronous (ReportLab is CPU-bound). Post-MVP thread-pool offloading noted in HANDOFF.md.
+- Followed existing router patterns from `tags.py` — helper `_get_template_or_404`, same dependency injection, same commit/refresh/validate flow.
+
+### Sensor results
+
+| Sensor | Result |
+|--------|--------|
+| `ruff check .` | All checks passed |
+| `mypy .` | Success: no issues found in 40 source files |
+| `pytest` | 46 passed, exit code 0 |
+
+### Follow-ups
+
+- **back-010**: BibTeX and CSV export.
+- **back-011**: CSV and BibTeX import.
+- **front-001**: Next.js scaffold (can run in parallel).
+
+---
+
+## 2026-05-28 — back-010: BibTeX and CSV export
+
+### What was done
+
+**CSV service** (`api/app/services/csv_io.py`):
+- `generate_csv(books: list[Book]) -> str` — 14-column CSV via `csv.writer` + `io.StringIO`. Authors joined with `"; "`. Empty list produces headers-only CSV.
+
+**BibTeX service** (`api/app/services/bibtex_io.py`):
+- `generate_bibtex(books: list[Book]) -> str` — uses `bibtexparser` 1.4 API (`BibDatabase` + `dumps`). Cite key: first author surname + year, UUID fallback. Deduplication with incrementing suffix. Fields: title (+ subtitle), author, publisher, year, isbn, language, note.
+
+**Export router** (`api/app/routers/export.py`):
+- `GET /export/csv` — auth required, `text/csv`, `Content-Disposition: attachment`, orders by title.
+- `GET /export/bibtex` — auth required, `application/x-bibtex`, `Content-Disposition: attachment`, orders by title.
+
+**Tests** (`api/tests/test_export.py`):
+- 6 HTTP tests: CSV with books, CSV empty, BibTeX with books, BibTeX empty, auth required for both endpoints.
+
+### Decisions
+
+- Used `bibtexparser` 1.x API (`BibDatabase` + `dumps`) as it's the installed version (1.4.4). The 2.x API is async/`Library`-based but not available in this version.
+- Cite key format uses first author's surname + year. Deduplication appends an incrementing number when keys collide.
+- BibTeX media type `application/x-bibtex` instead of `text/plain` — more specific for download identification.
+- CSV authors joined with `"; "` — semicolons as inner delimiter, matching the CSV spec where commas separate columns.
+- No tags in export — tags are associations, not standard BibTeX/CSV book fields.
+
+### Sensor results
+
+| Sensor | Result |
+|--------|--------|
+| `ruff check .` | All checks passed |
+| `mypy .` | Success: no issues found in 40 source files |
+| `pytest` | 52 passed (46 existing + 6 new), exit code 0 |
+
+### QA and Security
+
+- QA verdict: APPROVED. Minor reservation: generated BibTeX cite keys can still collide if a natural key equals a suffixed duplicate key.
+- Security verdict: ADVISORY. Non-blocking follow-ups: CSV formula-injection sanitization before multi-user/shared exports, `Cache-Control: private, no-store` on export responses, and unbounded/synchronous export behavior if catalog size grows.
+
+### Follow-ups
+
+- **back-011**: CSV and BibTeX import (counterpart to this export feature).
+- **front-001**: Next.js scaffold (can run in parallel).

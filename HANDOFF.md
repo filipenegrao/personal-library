@@ -5,56 +5,75 @@
 
 ## Last update
 
-- **Date:** 2026-05-25
-- **Session:** back-008 — Tags and loans CRUD
+- **Date:** 2026-05-28
+- **Session:** back-010 — BibTeX and CSV export
 - **Branch / HEAD:** main
 
 ## Goals completed this session
 
-### back-008: Tags and loans CRUD
+### back-010: BibTeX and CSV export
 
-**Tag schemas** (`api/app/schemas/tag.py`):
-- `TagCreate` — name (required), color (default `#6366f1`).
-- `TagUpdate` — name and color, both optional.
-- `TagOut` — id, name, color with `from_attributes=True`.
+**CSV service** (`api/app/services/csv_io.py`):
+- `generate_csv(books: list[Book]) -> str` — formats books as CSV using `csv.writer` + `io.StringIO`.
+- 14 columns: id, isbn_13, isbn_10, title, subtitle, authors, publisher, published_year, language, pages, cover_url, dewey_code, notes, created_at.
+- Multiple authors joined with `"; "` separator.
+- Empty list → valid CSV with headers only, no data rows.
 
-**Loan schemas** (`api/app/schemas/loan.py`):
-- `LoanCreate` — book_id, borrower_name, due_date (optional), notes (optional).
-- `LoanReturn` — returned_at (optional, defaults to UTC now in endpoint).
-- `LoanOut` — id, book_id, borrower_name, loaned_at, due_date, returned_at, notes with `from_attributes=True`.
+**BibTeX service** (`api/app/services/bibtex_io.py`):
+- `generate_bibtex(books: list[Book]) -> str` — formats books as BibTeX using `bibtexparser` 1.4 API (`BibDatabase` + `dumps`).
+- `_make_cite_key(book)` — first author surname + year; falls back to UUID prefix (16 hex chars) if no author/year.
+- Deduplication: appends incrementing suffix (`author2020`, `author20201`, ...) when cite keys collide.
+- Fields: title (+ subtitle with `": "` separator), author (`" and "` joined), publisher, year, isbn, language, note.
+- Empty list → empty string (valid empty BibTeX body, not an error).
 
-**Tags router** (`api/app/routers/tags.py`):
-- `POST /tags/` — create tag (201).
-- `GET /tags/` — list tags ordered by name.
-- `PATCH /tags/{tag_id}` — partial update (name/color), 404 on missing.
-- `DELETE /tags/{tag_id}` — delete tag (204). If tag is in use (has associated BookTag rows), catches the DB `IntegrityError` raised by the `ON DELETE RESTRICT` FK and returns 409 Conflict with a clear message. Added `passive_deletes=True` to `Tag.book_tags` relationship so the ORM delegates FK enforcement to the DB instead of trying to blank out the composite PK column.
+**Export router** (`api/app/routers/export.py`):
+- `GET /export/csv` — auth required, fetches all books ordered by title, returns `text/csv` with `Content-Disposition: attachment; filename=library_export.csv`.
+- `GET /export/bibtex` — auth required, fetches all books ordered by title, returns `application/x-bibtex` with `Content-Disposition: attachment; filename=library_export.bib`.
 
-**Loans router** (`api/app/routers/loans.py`):
-- `POST /loans/` — create loan. Validates `book_id` exists (404 if not). Returns 201.
-- `GET /loans/` — list loans ordered by `loaned_at` desc. Supports `open_only=true` filter (excludes returned loans).
-- `POST /loans/{loan_id}/return` — mark loan as returned. Sets `returned_at` to provided datetime or current UTC. 404 on missing loan.
+**Tests** (`api/tests/test_export.py`):
+- 6 HTTP tests: CSV with books (verify fields, Media-Type, Content-Disposition), CSV empty (headers only, 0 rows), BibTeX with books (verify entry structure, fields), BibTeX empty (empty body, 200), auth required for both endpoints (401).
 
-**Tests**:
-- `api/tests/test_tags.py` — 6 HTTP tests: create, list, update, delete (verify absent from list), 404 on missing (via PATCH), 409 on delete in-use tag.
-- `api/tests/test_loans.py` — 6 HTTP tests: create, create with nonexistent book → 404, return, return nonexistent → 404, list, open_only filter.
+### back-009: Label templates and PDF generation
 
-### `loans.book_id` delete policy — decision
+**Schemas** (`api/app/schemas/label_template.py`):
+- `LabelTemplateCreate` — name (required), width_mm (default 50.0), height_mm (default 30.0), font_size (default 8), show_dewey/show_title/show_barcode (default True).
+- `LabelTemplateOut` — id, name, width_mm, height_mm, font_size, show_dewey, show_title, show_barcode, created_at with `from_attributes=True`.
+- `LabelGenerateRequest` — book_ids (list[uuid.UUID]), template_id (uuid.UUID).
 
-**RESOLVED: kept as implicit RESTRICT.**
+**PDF service** (`api/app/services/pdf_labels.py`):
+- `generate_labels_pdf(books, template) -> bytes` — uses ReportLab Canvas with Code128 barcodes.
+- Page size from template `width_mm`/`height_mm`.
+- One label per page.
+- Optional sections: dewey (bold, slightly larger), title (wrapped to max 3 lines), barcode (Code128 from `book.isbn_13`).
+- Returns raw PDF bytes via `BytesIO`.
 
-The FK `loans.book_id → books.id` has no `ondelete` clause → defaults to PostgreSQL `NO ACTION` / `RESTRICT`. This means:
-- Deleting a book that has active loans will fail at the DB level.
-- Loan history is preserved — books with loans cannot be accidentally deleted.
+**Labels router** (`api/app/routers/labels.py`):
+- `POST /labels/templates/` — create template (201).
+- `GET /labels/templates/` — list templates ordered by name.
+- `DELETE /labels/templates/{template_id}` — delete template (204), 404 on missing.
+- `POST /labels/generate` — generate PDF. Fetches template (404 if missing), fetches books by `book_ids` (404 if none found), renders PDF, returns `application/pdf`.
+- All endpoints require auth (`get_current_user`).
 
-This is the conservative, safe default for a library catalog. If future requirements demand cascade-delete or soft-delete for loans, this can be changed with a migration. No code change needed for now. The open decision is now closed.
+**Tests** (`api/tests/test_labels.py`):
+- 8 HTTP tests: create template (201 + verify defaults), list templates, delete template (204 + verify absent), template not found → 404 (via DELETE), generate PDF (200 + Content-Type: application/pdf + non-trivial body length), template not found → 404 (via generate), no books → 404 (empty book_ids), bogus book_ids → 404.
+
+### Carry-forward notes (not addressed in this slice)
+
+- Duplicate tag name should become clean `409`.
+- Loan double-return needs a guard or idempotent behavior.
+- Tag delete missing-404 test should be added.
+- Tag color should be validated.
+- `DELETE /books/{id}` with active loans still returns `500`.
+- QA approved `back-010`; minor reservation: generated BibTeX cite keys can still collide if a natural key equals a suffixed duplicate key (for example `smith20241`).
+- Security verdict: ADVISORY. Non-blocking follow-ups: add CSV formula-injection sanitization before multi-user/shared export scenarios, consider `Cache-Control: private, no-store` on export responses, and revisit unbounded/synchronous export if catalog size grows.
 
 ### Prior sessions (carried forward)
 
-**back-001 through back-007** — complete. See `docs/session-log.md` for full history.
+**back-001 through back-009** — complete. See `docs/session-log.md` for full history.
 
 ## WIP (in-progress at handoff)
 
-Nothing. `back-001` through `back-008` are complete.
+Nothing. `back-001` through `back-010` are complete.
 
 ## Setup gaps / known issues
 
@@ -64,6 +83,7 @@ Nothing. `back-001` through `back-008` are complete.
 - **Frontend not yet scaffolded beyond directories** — `web/` still lacks `package.json` and installed dependencies.
 - **Google Books API key is optional** — without it, requests may hit anonymous rate limits.
 - **`test_engine` is function-scoped** — drops/creates schema per test (slower but avoids event-loop mismatch with asyncpg).
+- **ReportLab PDF generation is synchronous** — post-MVP, consider offloading to a thread pool if latency matters.
 
 ## Sensor results
 
@@ -71,11 +91,9 @@ Nothing. `back-001` through `back-008` are complete.
 |--------|--------|
 | `source .venv/bin/activate && ruff check .` | All checks passed |
 | `source .venv/bin/activate && mypy .` | Success: no issues found in 40 source files |
-| `source .venv/bin/activate && pytest` | 38 passed, exit code 0 |
+| `source .venv/bin/activate && pytest` | 52 passed, exit code 0 |
 
 ## Suggested next steps
 
-1. **back-009**: Label templates and PDF generation (reportlab).
-2. **back-010**: BibTeX and CSV export.
-3. **back-011**: CSV and BibTeX import.
-4. **front-001**: Next.js scaffold (can run in parallel at any point).
+1. **back-011**: CSV and BibTeX import.
+2. **front-001**: Next.js scaffold (can run in parallel at any point).

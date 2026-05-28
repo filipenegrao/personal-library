@@ -1,6 +1,6 @@
 {
   "project": "personal-library",
-  "last_updated": "2026-05-25",
+  "last_updated": "2026-05-28",
   "version": "0.1.0",
   "release_phase": "backend-catalog-partial",
   "domains": [
@@ -103,16 +103,16 @@
         {
           "id": "back-009",
           "name": "Label templates and PDF generation",
-          "status": "pending",
-          "tests": false,
-          "notes": "schemas/label_template.py, services/pdf_labels.py (reportlab), routers/labels.py. POST /labels/generate returns application/pdf with Dewey+title+barcode per book."
+          "status": "done",
+          "tests": true,
+          "notes": "schemas/label_template.py: LabelTemplateCreate/Out, LabelGenerateRequest. services/pdf_labels.py: generate_labels_pdf with ReportLab Canvas + Code128 barcodes. routers/labels.py: POST/GET /labels/templates/, DELETE /labels/templates/{id}, POST /labels/generate (returns application/pdf). 8 HTTP tests pass (template CRUD, PDF generation, 404 edge cases)."
         },
         {
           "id": "back-010",
           "name": "BibTeX and CSV export",
-          "status": "pending",
-          "tests": false,
-          "notes": "services/bibtex_io.py, services/csv_io.py, routers/export.py. GET /export/bibtex and GET /export/csv. Empty catalog returns valid empty file."
+          "status": "done",
+          "tests": true,
+          "notes": "services/bibtex_io.py: generate_bibtex(books) using bibtexparser (1.4 API: BibDatabase + dumps), cite keys from first author surname + year, deduplication. services/csv_io.py: generate_csv(books) using csv stdlib, 14-column output. routers/export.py: GET /export/csv (text/csv), GET /export/bibtex (application/x-bibtex), both with Content-Disposition header, auth required, ordered by title. tests/test_export.py: 6 HTTP tests — CSV with books, CSV empty, BibTeX with books, BibTeX empty, auth required for both endpoints."
         },
         {
           "id": "back-011",

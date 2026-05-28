@@ -3,7 +3,7 @@
 > Human-readable backlog. **Canonical task state is `STATUS.json`.**
 > Align checkboxes with `STATUS.json` when features move.
 
-Updated: 2026-05-25 (back-008 complete)
+Updated: 2026-05-28 (back-010 complete)
 
 ---
 
@@ -30,8 +30,8 @@ Updated: 2026-05-25 (back-008 complete)
 ## Backend — Catalog Features
 
 - [x] back-008: Tags and loans CRUD (done — 2026-05-25, loans.book_id delete policy resolved as RESTRICT)
-- [ ] back-009: Label templates and PDF generation (reportlab)
-- [ ] back-010: BibTeX and CSV export
+- [x] back-009: Label templates and PDF generation (reportlab)
+- [x] back-010: BibTeX and CSV export (done — 2026-05-28)
 - [ ] back-011: CSV and BibTeX import (MVP scope per approved spec, Module 6)
 
 ## Frontend — Core
