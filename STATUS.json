@@ -1,8 +1,8 @@
 {
   "project": "personal-library",
   "last_updated": "2026-05-28",
-  "version": "0.1.1",
-  "release_phase": "backend-catalog-complete",
+  "version": "0.2.0",
+  "release_phase": "frontend-scaffold",
   "domains": [
     {
       "name": "foundation",
@@ -125,15 +125,15 @@
     },
     {
       "name": "frontend-core",
-      "status": "pending",
+      "status": "in_progress",
       "quality_grade": "N/A",
       "features": [
         {
           "id": "front-001",
-          "name": "Next.js 15 scaffold — Tailwind v4, shadcn/ui, auth middleware",
-          "status": "pending",
+          "name": "Next.js 16.2.6 scaffold — Tailwind v4, shadcn/ui, auth middleware",
+          "status": "done",
           "tests": false,
-          "notes": "web/: create-next-app, shadcn init, @zxing/browser install. src/lib/api.ts, src/lib/auth.ts (server actions, httpOnly cookie). src/middleware.ts redirects unauthenticated users to /login."
+          "notes": "Next.js 16.2.6 installed (latest). Scaffolded with src/ structure, Tailwind v4, shadcn/ui, @zxing/browser. Next.js 16 breaking changes: middleware.ts renamed to proxy.ts (exported function must be named 'proxy'); next lint CLI removed (lint script uses 'eslint src'). Created: src/proxy.ts (auth guard), src/lib/api.ts (typed apiFetch wrapper), src/lib/auth.ts (server functions: login/logout/getToken with httpOnly cookie), src/app/login/page.tsx (placeholder), src/app/catalog/page.tsx (placeholder). Sensors: eslint src (clean), next build (4 routes + Proxy, exit 0)."
         },
         {
           "id": "front-002",

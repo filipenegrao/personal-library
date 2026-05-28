@@ -848,3 +848,45 @@ QA rejected `back-005` for a bug in `normalize_isbn()`:
 ### Follow-ups
 
 - Next product slice after acceptance: `front-001` Next.js scaffold.
+
+## 2026-05-28 — front-001: Next.js 15 scaffold (Next.js 16.2.6 installed)
+
+### What was done
+
+**Next.js scaffold** (`web/`):
+- Scaffolded with `create-next-app` (App Router, TypeScript, Tailwind v4). Installed version is **Next.js 16.2.6** (latest at time of install), not 15.
+- Moved `app/` into `src/app/` per project structure spec; updated `tsconfig.json` `paths` to `"@/*": ["./src/*"]`.
+- Installed and initialized **shadcn/ui** (v4.8.2) with Tailwind v4 support — created `src/components/ui/button.tsx` and `src/lib/utils.ts`.
+- Installed **@zxing/browser** for ISBN scanning.
+- Added **ESLint** (v9 flat config via `eslint-config-next` which exports a native flat config array) and `lint` script.
+
+**Breaking changes in Next.js 16** (noted in `web/AGENTS.md`):
+- `middleware.ts` is deprecated and renamed to **`proxy.ts`**. The exported function must be named `proxy`, not `middleware`.
+- `next lint` CLI command is removed. Lint script uses `eslint src` directly.
+
+**Files created:**
+- `src/proxy.ts` — auth guard (redirects unauthenticated → `/login`; redirects authenticated from `/login` → `/catalog`).
+- `src/lib/api.ts` — typed `apiFetch<T>` wrapper against `NEXT_PUBLIC_API_URL`, with `ApiError` class.
+- `src/lib/auth.ts` — server functions for `login` (POSTs `/auth/login`, sets httpOnly JWT cookie, redirects to `/catalog`), `logout` (deletes cookie, redirects to `/login`), `getToken` (reads cookie value).
+- `src/app/login/page.tsx` — placeholder login page.
+- `src/app/catalog/page.tsx` — placeholder catalog page.
+- `web/.env.local.example` — documents `NEXT_PUBLIC_API_URL`.
+- `web/eslint.config.mjs` — ESLint flat config using `eslint-config-next`.
+
+### Sensor results
+
+| Sensor | Result |
+|--------|--------|
+| `npm run lint` | Passed (0 warnings, 0 errors) |
+| `npm run build` | Passed — 4 routes built (/, /_not-found, /catalog, /login) + Proxy (Middleware) |
+
+### Gate results
+
+| Gate | Result |
+|------|--------|
+| QA | APPROVED_WITH_RESERVATIONS — no blockers; 3 items deferred to front-002: (1) extract shared API_URL to lib/config.ts, (2) use apiFetch in auth.ts login instead of raw fetch, (3) replace NEXT_PUBLIC_API_URL in auth.ts with server-only env var |
+| Security | ADVISORY — postcss CVE in next@16.2.6 (build-time only, no viable fix); NEXT_PUBLIC_ in server context; ?from= redirect param must be validated as relative path in front-002 to prevent open-redirect |
+
+### Follow-ups
+
+- `front-002`: Login page UI (form, POST to `/auth/login` via `login` server action). Address all QA/Security advisories in this slice.

@@ -13,12 +13,12 @@ tools.
 
 ## Tool roles in this workflow
 
-| Role         | Tool                              | What they do                             |
-|--------------|-----------------------------------|------------------------------------------|
-| Orchestrator | Claude Code (you)                 | Plans, produces prompts, reviews results |
-| Builder      | Qwen Coder / Cursor / Antigravity | Implements the task                      |
-| QA           | GitHub Copilot                    | Reviews the diff independently           |
-| Security     | GitHub Copilot                    | Final gate: audits diff for security issues |
+| Role         | Tool                              | What they do                                |
+|--------------|-----------------------------------|---------------------------------------------|
+| Orchestrator | Claude Code (you)                 | Plans, produces prompts, reviews results    |
+| Builder      | Opencode (backend) or Claude (UI) | Implements the task                         |
+| QA           | GitHub Copilot                    | Reviews the diff independently              |
+| Security     | Codex                             | Final gate: audits diff for security issues |
 
 Default mode: you produce a prompt → the human pastes it into the right tool →
 the human brings the output back to you. This is intentional: each agent runs in
