@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import make_engine, make_session_factory
-from app.routers import auth, books, export, labels, loans, tags
+from app.routers import auth, books, export, import_, labels, loans, tags
 
 
 @asynccontextmanager
@@ -32,3 +32,4 @@ app.include_router(tags.router, prefix="/tags", tags=["tags"])
 app.include_router(loans.router, prefix="/loans", tags=["loans"])
 app.include_router(labels.router, prefix="/labels", tags=["labels"])
 app.include_router(export.router, prefix="/export", tags=["export"])
+app.include_router(import_.router, prefix="/import", tags=["import"])

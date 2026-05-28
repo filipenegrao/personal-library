@@ -1,3 +1,5 @@
+from typing import Any
+
 import bibtexparser
 from bibtexparser.bibdatabase import BibDatabase
 
@@ -58,3 +60,56 @@ def generate_bibtex(books: list[Book]) -> str:
 
     db.entries = entries
     return bibtexparser.dumps(db)
+
+
+def parse_bibtex(content: str) -> list[dict[str, str]]:
+    db = bibtexparser.loads(content)
+    entries: list[dict[str, str]] = []
+    for entry in db.entries:
+        if entry.get("ENTRYTYPE", "").lower() != "book":
+            continue
+        entries.append(entry)
+    return entries
+
+
+def _to_optional_int(value: str) -> int | None:
+    stripped = value.strip()
+    if not stripped:
+        return None
+    try:
+        return int(stripped)
+    except ValueError:
+        return None
+
+
+def _split_isbn(value: str) -> tuple[str | None, str | None]:
+    stripped = value.strip()
+    if not stripped:
+        return None, None
+    isbn = "".join(char for char in stripped if char not in {" ", "-"}).upper()
+    if len(isbn) == 13 and isbn.isdigit():
+        return isbn, None
+    if len(isbn) == 10 and isbn[:-1].isdigit() and (isbn[-1].isdigit() or isbn[-1] == "X"):
+        return None, isbn
+    return None, None
+
+
+def map_bibtex_entry_to_book_data(entry: dict[str, str]) -> dict[str, Any]:
+    authors_str = entry.get("author", "").strip()
+    if authors_str:
+        authors = [a.strip() for a in authors_str.split(" and ") if a.strip()]
+    else:
+        authors = []
+
+    isbn_13, isbn_10 = _split_isbn(entry.get("isbn", ""))
+
+    return {
+        "isbn_13": isbn_13,
+        "isbn_10": isbn_10,
+        "title": entry.get("title", "").strip(),
+        "authors": authors,
+        "publisher": entry.get("publisher", "").strip() or None,
+        "published_year": _to_optional_int(entry.get("year", "")),
+        "language": entry.get("language", "").strip() or None,
+        "notes": entry.get("note", "").strip() or None,
+    }

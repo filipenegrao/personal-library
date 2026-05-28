@@ -798,3 +798,53 @@ QA rejected `back-005` for a bug in `normalize_isbn()`:
 
 - The harness still does not commit or push.
 - Full automation depends on local `opencode`/`copilot` permissions and may still need command approval in Codex.
+
+---
+
+## 2026-05-28 — back-011: CSV and BibTeX import
+
+### What was done
+
+**CSV import/export service** (`api/app/services/csv_io.py`):
+- Added `parse_csv(content)` using `csv.DictReader`, with blank-row skipping and missing/empty-header validation.
+- Added `map_csv_row_to_book_data(row)` to map export-style CSV rows back to book fields, including semicolon-separated authors and optional integer fields.
+- Added `https`-only scheme filtering for imported `cover_url`.
+- Added ISBN-10/ISBN-13 shape normalization for CSV imports; invalid or oversized ISBN values are dropped before persistence.
+- Hardened `generate_csv()` against spreadsheet formula injection by prefixing formula-like cells with `'`.
+
+**BibTeX import/export service** (`api/app/services/bibtex_io.py`):
+- Added `parse_bibtex(content)` using `bibtexparser.loads()` and filtering to `@book` entries.
+- Added `map_bibtex_entry_to_book_data(entry)` to map author/year/isbn/publisher/language/note into book fields.
+- Added normalization for valid hyphenated/space-separated ISBN values; invalid values are dropped before persistence.
+
+**Import API**:
+- Added `api/app/schemas/import_result.py` with `ImportResult`.
+- Added `api/app/routers/import_.py` with authenticated `POST /import/csv` and `POST /import/bibtex` multipart upload endpoints.
+- Added stream-read 1 MB upload cap and 5,000-record cap with 413 responses.
+- Registered the import router in `api/app/main.py`.
+
+**Export hardening** (`api/app/routers/export.py`):
+- Added `Cache-Control: private, no-store` to CSV and BibTeX export responses.
+
+**Tests**:
+- Added `api/tests/test_import.py` with 21 HTTP tests for CSV/BibTeX import success, empty files, empty-header rejection, auth, extension validation, missing titles, malformed/extra-column behavior, oversized upload rejection, too-many-rows rejection, non-UTF-8 rejection, `cover_url` https-only filtering, invalid ISBN handling, hyphenated ISBN-13 normalization, and BibTeX article filtering.
+- Extended `api/tests/test_export.py` with formula sanitization and cache-header coverage.
+
+### Sensor results
+
+| Sensor | Result |
+|--------|--------|
+| `ruff check .` | All checks passed |
+| `mypy .` | Success: no issues found in 43 source files |
+| `pytest` | 74 passed, 1 existing warning, exit code 0 |
+
+### Gate results
+
+| Gate | Result |
+|------|--------|
+| QA | APPROVED after scoped rerun |
+| Security | CLEAN after actionable advisories were fixed |
+
+### Follow-ups
+
+- Next product slice after acceptance: `front-001` Next.js scaffold.

@@ -19,6 +19,7 @@ async def test_csv_export_with_books(auth_client: AsyncClient):
     assert resp.status_code == 200
     assert "text/csv" in resp.headers.get("content-type", "")
     assert "attachment" in resp.headers.get("content-disposition", "")
+    assert resp.headers.get("cache-control") == "private, no-store"
 
     reader = csv.DictReader(io.StringIO(resp.text))
     rows = list(reader)
@@ -28,6 +29,26 @@ async def test_csv_export_with_books(auth_client: AsyncClient):
     assert rows[0]["publisher"] == "Test Press"
     assert rows[0]["published_year"] == "2025"
     assert rows[0]["authors"] == "Author One"
+
+
+@pytest.mark.asyncio
+async def test_csv_export_sanitizes_spreadsheet_formulas(auth_client: AsyncClient):
+    await auth_client.post("/books/", json={
+        "title": "=HYPERLINK(\"https://example.com\")",
+        "authors": ["@malicious"],
+        "publisher": "+publisher",
+        "notes": "-note",
+    })
+
+    resp = await auth_client.get("/export/csv")
+    assert resp.status_code == 200
+
+    reader = csv.DictReader(io.StringIO(resp.text))
+    row = next(reader)
+    assert row["title"].startswith("'=")
+    assert row["authors"].startswith("'@")
+    assert row["publisher"].startswith("'+")
+    assert row["notes"].startswith("'-")
 
 
 @pytest.mark.asyncio
@@ -57,6 +78,7 @@ async def test_bibtex_export_with_books(auth_client: AsyncClient):
     resp = await auth_client.get("/export/bibtex")
     assert resp.status_code == 200
     assert "attachment" in resp.headers.get("content-disposition", "")
+    assert resp.headers.get("cache-control") == "private, no-store"
 
     text = resp.text
     assert "@book{" in text

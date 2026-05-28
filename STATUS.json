@@ -1,8 +1,8 @@
 {
   "project": "personal-library",
   "last_updated": "2026-05-28",
-  "version": "0.1.0",
-  "release_phase": "backend-catalog-partial",
+  "version": "0.1.1",
+  "release_phase": "backend-catalog-complete",
   "domains": [
     {
       "name": "foundation",
@@ -90,7 +90,7 @@
     },
     {
       "name": "backend-catalog",
-      "status": "in_progress",
+      "status": "done",
       "quality_grade": "N/A",
       "features": [
         {
@@ -112,14 +112,14 @@
           "name": "BibTeX and CSV export",
           "status": "done",
           "tests": true,
-          "notes": "services/bibtex_io.py: generate_bibtex(books) using bibtexparser (1.4 API: BibDatabase + dumps), cite keys from first author surname + year, deduplication. services/csv_io.py: generate_csv(books) using csv stdlib, 14-column output. routers/export.py: GET /export/csv (text/csv), GET /export/bibtex (application/x-bibtex), both with Content-Disposition header, auth required, ordered by title. tests/test_export.py: 6 HTTP tests — CSV with books, CSV empty, BibTeX with books, BibTeX empty, auth required for both endpoints."
+          "notes": "services/bibtex_io.py: generate_bibtex(books) using bibtexparser (1.4 API: BibDatabase + dumps), cite keys from first author surname + year, deduplication. services/csv_io.py: generate_csv(books) using csv stdlib, 14-column output, and spreadsheet formula-prefix sanitization. routers/export.py: GET /export/csv (text/csv), GET /export/bibtex (application/x-bibtex), both with Content-Disposition and Cache-Control: private, no-store headers, auth required, ordered by title. tests/test_export.py: 7 HTTP tests — CSV with books, CSV formula sanitization, CSV empty, BibTeX with books, BibTeX empty, auth required for both endpoints."
         },
         {
           "id": "back-011",
           "name": "CSV and BibTeX import",
-          "status": "pending",
-          "tests": false,
-          "notes": "MVP scope per approved spec (Module 6). CSV upload with column mapping (POST /import/csv). BibTeX upload to import existing catalog from Zotero/Mendeley (POST /import/bibtex). Part of routers/export.py or new routers/import_.py."
+          "status": "done",
+          "tests": true,
+          "notes": "services/csv_io.py: parse_csv() + map_csv_row_to_book_data() parse CSV content and map rows to book fields (authors from '; ' split, optional int fields, empty-header rejection, https-only cover_url, ISBN shape normalization with invalid values dropped). services/bibtex_io.py: parse_bibtex() uses bibtexparser.loads (1.4 API, filters to @book entries only) + map_bibtex_entry_to_book_data() maps author/year/isbn/publisher/language/note and normalizes valid ISBN-10/ISBN-13 values. schemas/import_result.py: ImportResult {total, created, errors, books}. routers/import_.py: POST /import/csv (multipart .csv file, UTF-8) and POST /import/bibtex (multipart .bib file, UTF-8), both auth-only, with streaming 1 MB upload cap and 5,000 record cap. Rows/entries missing 'title' are skipped with error entries. tests/test_import.py: 21 HTTP tests pass (CSV with books, missing title, empty, empty header rejected, auth required, wrong extension, extra columns, oversized upload, too many rows, non-UTF-8, cover_url scheme filtering, invalid ISBNs dropped; BibTeX with books, hyphenated ISBN-13, invalid ISBNs dropped, filters articles, empty, auth required, wrong extension, malformed, missing title). QA approved; Security verdict CLEAN after actionable advisories were fixed."
         }
       ]
     },

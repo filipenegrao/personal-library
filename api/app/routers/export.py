@@ -10,6 +10,17 @@ from app.services.csv_io import generate_csv
 
 router = APIRouter()
 
+DOWNLOAD_HEADERS = {
+    "csv": {
+        "Content-Disposition": "attachment; filename=library_export.csv",
+        "Cache-Control": "private, no-store",
+    },
+    "bibtex": {
+        "Content-Disposition": "attachment; filename=library_export.bib",
+        "Cache-Control": "private, no-store",
+    },
+}
+
 
 @router.get("/csv")
 async def export_csv(
@@ -22,7 +33,7 @@ async def export_csv(
     return Response(
         content=csv_content,
         media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=library_export.csv"},
+        headers=DOWNLOAD_HEADERS["csv"],
     )
 
 
@@ -37,5 +48,5 @@ async def export_bibtex(
     return Response(
         content=bibtex_content,
         media_type="application/x-bibtex",
-        headers={"Content-Disposition": "attachment; filename=library_export.bib"},
+        headers=DOWNLOAD_HEADERS["bibtex"],
     )
