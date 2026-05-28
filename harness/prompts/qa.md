@@ -48,10 +48,20 @@ of the Builder agent independently and impartially.
 
 ## Format of your report
 
+Your report MUST include a machine-parseable verdict line for the
+orchestration loop to act on.  Put this line on its own line in
+your output:
+
+```
+QA_VERDICT: APPROVED | APPROVED_WITH_RESERVATIONS | REJECTED
+```
+
+Then follow with your full human-readable report:
+
 ```
 ## QA review result
 
-**Verdict:** APPROVED | REJECTED | APPROVED WITH RESERVATIONS
+**Verdict:** APPROVED | REJECTED | APPROVED_WITH_RESERVATIONS
 
 ### Critical problems (block merge)
 - [list here — includes layer violations, missing possible tests, exposed credentials]
@@ -64,7 +74,7 @@ of the Builder agent independently and impartially.
 
 ### Next action
 - If REJECTED: describe exactly what the Builder should fix
-- If APPROVED WITH RESERVATIONS: list mandatory items before merge and items that can follow later
+- If APPROVED_WITH_RESERVATIONS: list mandatory items before merge and items that can follow later
 - If APPROVED: confirm that merge can be done
 ```
 

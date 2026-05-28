@@ -6,10 +6,33 @@
 ## Last update
 
 - **Date:** 2026-05-28
-- **Session:** back-010 — BibTeX and CSV export
+- **Session:** harness CLI loop hardening
 - **Branch / HEAD:** main
 
 ## Goals completed this session
+
+### Harness CLI loop hardening
+
+**Agent loop** (`harness/prompts/scripts/agent-loop.py`):
+- Reads prompt templates directly from `harness/prompts/{builder,qa,security}.md` instead of a missing `templates/` directory.
+- Falls back to an internal safe config if no config file exists.
+- Supports `--diff-path` to scope the diff sent to QA/Security and avoid unrelated dirty worktree changes.
+- Supports command placeholders `{root}`, `{prompt_file}`, and `{prompt}` for CLIs like `opencode` and `copilot`.
+- Stops the loop when Builder, QA, or Security commands exit nonzero instead of continuing with invalid output.
+
+**Config and docs**:
+- Added `harness/prompts/agent-harness.config.example.json` with `opencode` backend Builder and `copilot` QA/Security examples.
+- Updated `harness/prompts/README.md` with active-file inventory, future-orchestrator instructions, correct repo-relative commands, and scoped-diff usage.
+- Removed unused duplicate prompt variants: `harness/prompts/builder 2.md`, `harness/prompts/orchestrator 2.md`, and `harness/prompts/qa 2.md`.
+- Removed generated `harness/prompts/scripts/__pycache__/` bytecode.
+- Updated `.gitignore` to ignore `.harness/` run artifacts and local `harness/prompts/agent-harness.config.json`.
+
+**Verification**:
+- `python3 -m py_compile harness/prompts/scripts/agent-loop.py` passed.
+- `python3 -m json.tool harness/prompts/agent-harness.config.example.json` passed.
+- `harness/prompts/scripts/agent-loop.sh --help` passed.
+- Manual smoke run passed: generated `.harness/runs/20260528-134153/` with Builder/QA/Security prompt files and final report.
+- `git check-ignore -v .harness/runs/20260528-134153/final-report.md` confirmed generated run artifacts are ignored by `.gitignore`.
 
 ### back-010: BibTeX and CSV export
 

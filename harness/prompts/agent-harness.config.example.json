@@ -1,0 +1,35 @@
+{
+  "max_turns": 3,
+  "run_dir": ".harness/runs",
+  "diff_paths": ["."],
+  "diff_exclude": [
+    ".harness/runs",
+    "harness/prompts/agent-harness.config.json"
+  ],
+  "routing": {
+    "frontend_keywords": ["frontend", "ui", "page", "component", "css", "tailwind", "next", "react", "login"],
+    "backend_keywords": ["api", "backend", "endpoint", "database", "model", "schema", "migration", "export", "import"]
+  },
+  "agents": {
+    "builder_backend": {
+      "enabled": true,
+      "input": "file",
+      "command": "opencode run --dir {root} --format json --title harness-builder --file {prompt_file} -- \"Implement the attached prompt. Preserve unrelated changes and report exact sensors.\""
+    },
+    "builder_frontend": {
+      "enabled": false,
+      "input": "arg",
+      "command": "claude -p {prompt}"
+    },
+    "qa": {
+      "enabled": true,
+      "input": "arg",
+      "command": "copilot -C {root} -p {prompt} --silent --allow-all-tools --deny-tool=write --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(git add)'"
+    },
+    "security": {
+      "enabled": true,
+      "input": "arg",
+      "command": "copilot -C {root} -p {prompt} --silent --allow-all-tools --deny-tool=write --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(git add)'"
+    }
+  }
+}

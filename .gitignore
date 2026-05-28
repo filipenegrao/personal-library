@@ -17,5 +17,9 @@ node_modules/
 # Logs
 *.log
 
+# Harness local state
+.harness/
+harness/prompts/agent-harness.config.json
+
 # macOS
 .DS_Store

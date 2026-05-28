@@ -767,3 +767,34 @@ QA rejected `back-005` for a bug in `normalize_isbn()`:
 
 - **back-011**: CSV and BibTeX import (counterpart to this export feature).
 - **front-001**: Next.js scaffold (can run in parallel).
+
+---
+
+## 2026-05-28 — Harness CLI loop hardening
+
+### What was done
+
+- Updated `harness/prompts/scripts/agent-loop.py` to use the existing prompt files directly from `harness/prompts/` instead of a missing `templates/` directory.
+- Added default config fallback plus `harness/prompts/agent-harness.config.example.json` with `opencode` backend Builder and `copilot` QA/Security examples.
+- Added `--diff-path` so QA/Security prompts can be scoped to the active slice instead of the full dirty worktree.
+- Added command placeholders `{root}`, `{prompt_file}`, and `{prompt}` for CLI integration.
+- Made Builder/QA/Security nonzero exits stop the loop instead of continuing to later gates.
+- Updated `harness/prompts/README.md` with active-file inventory, future-orchestrator instructions, correct repo-relative usage, and scoped-diff example.
+- Removed unused duplicate prompt variants: `harness/prompts/builder 2.md`, `harness/prompts/orchestrator 2.md`, and `harness/prompts/qa 2.md`.
+- Removed generated `harness/prompts/scripts/__pycache__/` bytecode.
+- Updated `.gitignore` to ignore `.harness/` generated runs and local `harness/prompts/agent-harness.config.json`.
+
+### Verification
+
+| Check | Result |
+|-------|--------|
+| `python3 -m py_compile harness/prompts/scripts/agent-loop.py` | passed |
+| `python3 -m json.tool harness/prompts/agent-harness.config.example.json` | passed |
+| `harness/prompts/scripts/agent-loop.sh --help` | passed |
+| manual smoke run (`--mode manual --builder backend --diff-path ...`) | generated prompts and final report |
+| `git check-ignore -v .harness/runs/20260528-134153/final-report.md` | `.harness/` ignore rule confirmed |
+
+### Notes
+
+- The harness still does not commit or push.
+- Full automation depends on local `opencode`/`copilot` permissions and may still need command approval in Codex.
